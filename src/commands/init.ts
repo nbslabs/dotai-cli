@@ -1,0 +1,192 @@
+import type { CommandModule } from 'yargs'
+import { join, basename } from 'path'
+import { logger } from '../utils/logger'
+import { promptCheckbox, promptInput, promptConfirm } from '../utils/prompt'
+import { readConfig, writeConfig, createDefaultConfig, markToolLinked, findProjectRoot } from '../core/config'
+import { getToolChoices, getGitignoreEntries, getAllToolIds, getToolById } from '../core/registry'
+import { scaffoldAiDir, updateGitignore } from '../core/scaffold'
+import { createSymlink } from '../core/symlink'
+import { pathExists } from '../utils/fs'
+
+interface InitArgs {
+  yes?: boolean
+  tools?: string
+  dir?: string
+  'no-link'?: boolean
+  'dry-run'?: boolean
+}
+
+export const initCommand: CommandModule<{}, InitArgs> = {
+  command: 'init',
+  describe: 'Initialize .ai/ directory and create .dotai.json',
+  builder: (yargs) =>
+    yargs
+      .option('yes', {
+        alias: 'y',
+        type: 'boolean',
+        description: 'Skip all prompts, use defaults',
+      })
+      .option('tools', {
+        type: 'string',
+        description: 'Comma-separated tools: claude,gemini,cursor,copilot,windsurf,codex',
+      })
+      .option('dir', {
+        type: 'string',
+        description: 'Custom AI dir name (default: .ai)',
+        default: '.ai',
+      })
+      .option('no-link', {
+        type: 'boolean',
+        description: 'Scaffold only, do not create symlinks',
+      })
+      .option('dry-run', {
+        type: 'boolean',
+        description: 'Show what would be created without doing it',
+      }),
+
+  handler: async (argv) => {
+    try {
+      const projectRoot = process.cwd()
+      const aiDir = argv.dir || '.ai'
+      const dryRun = argv['dry-run'] || false
+      const noLink = argv['no-link'] || false
+      const useDefaults = argv.yes || false
+
+      logger.title(`dotai v1.0.0`)
+      logger.newline()
+      logger.info(`Initializing AI config in ${projectRoot}`)
+      logger.newline()
+
+      // Check if already initialized
+      const existingConfig = await readConfig(projectRoot)
+      if (existingConfig) {
+        if (!useDefaults) {
+          const proceed = await promptConfirm('Project already initialized. Reinitialize?', false)
+          if (!proceed) {
+            logger.dim('Aborted.')
+            return
+          }
+        }
+      }
+
+      // Select tools
+      let selectedTools: string[]
+      if (argv.tools) {
+        selectedTools = argv.tools.split(',').map((t) => t.trim())
+      } else if (useDefaults) {
+        selectedTools = getAllToolIds().filter((id) => id !== 'codex')
+      } else {
+        selectedTools = await promptCheckbox(
+          'Select AI tools to configure:',
+          getToolChoices()
+        )
+      }
+
+      if (selectedTools.length === 0) {
+        logger.warn('No tools selected. Aborting.')
+        return
+      }
+
+      // Get project info
+      let projectName: string
+      let projectDescription: string
+
+      if (useDefaults) {
+        projectName = basename(projectRoot)
+        projectDescription = ''
+      } else {
+        projectName = await promptInput('Project name:', basename(projectRoot))
+        projectDescription = await promptInput('Brief description:', '')
+      }
+
+      if (dryRun) {
+        logger.info('[DRY RUN] Would create the following:')
+        logger.newline()
+      }
+
+      // Scaffold .ai/ directory
+      logger.plain('Creating .ai/ structure...')
+      const createdFiles = await scaffoldAiDir(projectRoot, {
+        projectName,
+        projectDescription,
+        aiDir,
+        tools: selectedTools,
+      })
+
+      // Create .dotai.json
+      const config = createDefaultConfig(selectedTools, aiDir)
+
+      if (!dryRun) {
+        await writeConfig(projectRoot, config)
+        logger.success('.dotai.json')
+      }
+
+      // Link tools
+      if (!noLink && !dryRun) {
+        logger.newline()
+        logger.plain('Linking tools...')
+
+        for (const toolId of selectedTools) {
+          const tool = getToolById(toolId)
+          if (!tool) continue
+
+          const aiPath = join(projectRoot, aiDir)
+          let toolLinked = false
+
+          for (const link of tool.links) {
+            const source = join(aiPath, link.source)
+            const target = join(projectRoot, link.target)
+
+            // Only link if source exists or is required
+            if (!link.required && !(await pathExists(source))) {
+              continue
+            }
+
+            const result = await createSymlink(source, target, { force: false })
+            if (result.status === 'created' || result.status === 'already-linked') {
+              toolLinked = true
+            }
+          }
+
+          if (toolLinked) {
+            markToolLinked(config, toolId)
+            const shortTarget = tool.links[0]
+              ? `${tool.links[0].target} → ${aiDir}/${tool.links[0].source}`
+              : tool.dirName
+            logger.success(`${tool.id.padEnd(10)} ${shortTarget}`)
+          }
+        }
+
+        await writeConfig(projectRoot, config)
+      }
+
+      // Update .gitignore
+      if (!dryRun) {
+        const gitignoreEntries = getGitignoreEntries(selectedTools)
+        if (gitignoreEntries.length > 0) {
+          let shouldUpdate = useDefaults
+          if (!useDefaults) {
+            shouldUpdate = await promptConfirm(
+              `Add ${gitignoreEntries.length} entries to .gitignore?`,
+              true
+            )
+          }
+          if (shouldUpdate) {
+            const count = await updateGitignore(projectRoot, gitignoreEntries)
+            if (count > 0) {
+              logger.newline()
+              logger.success(`Updated .gitignore (+${count} entries)`)
+            }
+          }
+        }
+      }
+
+      logger.newline()
+      logger.success('Done! Edit .ai/ files — all tools stay in sync automatically.')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      logger.error(`Init failed: ${message}`)
+      process.exit(1)
+    }
+  },
+}

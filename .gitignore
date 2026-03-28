@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+npm-debug.log*
+
+# dotai managed symlinks (recreated via `dotai link`)
+.claude/
+.gemini/
+.cursor/
+.windsurf/
+.codex/
+.agents/
+CLAUDE.md
+GEMINI.md
+AGENTS.md
+.geminiignore
+.codeiumignore
