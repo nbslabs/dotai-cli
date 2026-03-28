@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dotai — One .ai/ folder. All your AI tools. Always in sync.</title>
+  <meta name="description" content="dotai is a CLI tool that manages AI coding tool configurations from a single .ai/ folder using symlinks. Supports Claude, Gemini, Cursor, Copilot, Windsurf, Codex, and Antigravity.">
+  <meta name="keywords" content="dotai, AI, CLI, Claude, Gemini, Cursor, Copilot, Windsurf, Codex, Antigravity, config, symlink">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="dotai — One .ai/ folder for all AI tools">
+  <meta property="og:description" content="Manage AI coding tool configs from a single .ai/ folder. Supports Claude, Gemini, Cursor, Copilot, Windsurf, Codex & Antigravity.">
+  <meta property="og:type" content="website">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --text: #1a1a2e;
+      --text-secondary: #64748b;
+      --accent: #6366f1;
+      --accent-light: #818cf8;
+      --accent-bg: #eef2ff;
+      --border: #e2e8f0;
+      --code-bg: #f1f5f9;
+      --green: #10b981;
+      --radius: 12px;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f0f1a;
+        --surface: #1a1a2e;
+        --text: #e2e8f0;
+        --text-secondary: #94a3b8;
+        --accent: #818cf8;
+        --accent-light: #a5b4fc;
+        --accent-bg: #1e1b4b;
+        --border: #2d2d44;
+        --code-bg: #16162a;
+        --green: #34d399;
+      }
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      background: color-mix(in srgb, var(--surface) 85%, transparent);
+    }
+
+    .nav-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--text);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-logo span {
+      color: var(--accent);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 8px;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+      background: var(--code-bg);
+    }
+
+    .nav-links .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .nav-links .btn-primary:hover {
+      background: var(--accent-light);
+      color: #fff;
+    }
+
+    /* ── Container ── */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 140px 0 80px;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-bg);
+      color: var(--accent);
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 3.75rem);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 .gradient {
+      background: linear-gradient(135deg, var(--accent), #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      max-width: 560px;
+      margin: 0 auto 36px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-hero {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent);
+    }
+
+    .btn-hero:hover {
+      background: var(--accent-light);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 40%, transparent);
+    }
+
+    .btn-outline {
+      background: var(--surface);
+      color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── Install bar ── */
+    .install-bar {
+      max-width: 480px;
+      margin: 32px auto 0;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .install-bar code {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+
+    .install-bar code .dim {
+      color: var(--text-secondary);
+    }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-secondary);
+      padding: 4px;
+      border-radius: 6px;
+      transition: all 0.15s;
+      display: flex;
+    }
+
+    .copy-btn:hover { color: var(--accent); }
+
+    .copy-btn.copied { color: var(--green); }
+
+    /* ── Sections ── */
+    section {
+      padding: 80px 0;
+    }
+
+    section + section {
+      border-top: 1px solid var(--border);
+    }
+
+    .section-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    section h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+
+    section > .container > p {
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin-bottom: 40px;
+    }
+
+    /* ── Diagram ── */
+    .diagram {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.8;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .diagram .arrow { color: var(--accent); }
+    .diagram .comment { color: var(--text-secondary); font-style: italic; }
+    .diagram .file { color: var(--green); }
+
+    /* ── Cards grid ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 10%, transparent);
+    }
+
+    .card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card p {
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+    }
+
+    .card .badge {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      background: var(--code-bg);
+      padding: 2px 8px;
+      border-radius: 6px;
+      color: var(--text-secondary);
+    }
+
+    /* ── Command table ── */
+    .cmd-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .cmd-table th {
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .cmd-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .cmd-table tr:last-child td { border-bottom: none; }
+
+    .cmd-table code {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      background: var(--accent-bg);
+      color: var(--accent);
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    /* ── Mapping table ── */
+    .mapping-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .mapping-table th {
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      padding: 10px 14px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .mapping-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .mapping-table tr:last-child td { border-bottom: none; }
+
+    .mapping-table code {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+    }
+
+    .mapping-table .src { color: var(--green); }
+    .mapping-table .tgt { color: var(--accent); }
+
+    /* ── Code block ── */
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.8;
+      overflow-x: auto;
+      margin: 20px 0;
+      white-space: pre-wrap;
+    }
+
+    .code-block .prompt { color: var(--accent); user-select: none; }
+    .code-block .comment { color: var(--text-secondary); }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .hero { padding: 120px 0 60px; }
+      section { padding: 60px 0; }
+      .diagram { font-size: 0.75rem; padding: 20px; }
+      .nav-links a.hide-mobile { display: none; }
+      .cards { grid-template-columns: 1fr; }
+      .mapping-table { font-size: 0.78rem; }
+      .mapping-table th, .mapping-table td { padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <span>dot</span>ai
+      </a>
+      <div class="nav-links">
+        <a href="#how-it-works" class="hide-mobile">How it works</a>
+        <a href="#tools" class="hide-mobile">Tools</a>
+        <a href="#commands" class="hide-mobile">Commands</a>
+        <a href="https://github.com/nbslabs/dotai-cli" class="btn-primary">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="container">
+      <div class="hero-badge">✦ Open Source CLI Tool</div>
+      <h1>
+        One <code>.ai/</code> folder.<br>
+        <span class="gradient">All your AI tools.</span><br>
+        Always in sync.
+      </h1>
+      <p>
+        Stop maintaining separate config files for every AI coding tool.
+        dotai manages Claude, Gemini, Cursor, Copilot, Windsurf, Codex &amp; Antigravity from a single directory using symlinks.
+      </p>
+      <div class="hero-actions">
+        <a href="https://github.com/nbslabs/dotai-cli" class="btn btn-hero">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          View on GitHub
+        </a>
+        <a href="https://www.npmjs.com/package/@nbslabs/dotai" class="btn btn-outline">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M0 7.334v8h6.666v1.332H12v-1.332h12v-8H0zm6.666 6.664H5.334v-4H3.999v4H1.335V8.667h5.331v5.331zm4 0h-2.666V8.667h5.334v5.332h-2.668v1.332zm12-1.332h-1.333v-4h-1.334v4h-1.333v-4h-1.334v4h-1.333V8.667h6.667v4.669zM11.333 10h1.334v2.667h-1.334V10z"/></svg>
+          npm Package
+        </a>
+      </div>
+      <div class="install-bar">
+        <code><span class="dim">$</span> npm install -g @nbslabs/dotai</code>
+        <button class="copy-btn" onclick="copyInstall(this)" title="Copy to clipboard">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <section id="how-it-works">
+    <div class="container">
+      <div class="section-label">How it works</div>
+      <h2>Edit once. Every tool stays in sync.</h2>
+      <p>
+        dotai creates a <code>.ai/</code> directory as your source of truth, then symlinks
+        each file to where every AI tool expects it.
+      </p>
+      <div class="diagram"><span class="file">.ai/</span>                           <span class="comment">← Your source of truth (committed to git)</span>
+├── <span class="file">AI.md</span>               <span class="arrow">──→</span>    CLAUDE.md, GEMINI.md, AGENTS.md,
+│                               .github/copilot-instructions.md
+├── <span class="file">rules/</span>              <span class="arrow">──→</span>    .cursor/rules/, .windsurf/rules/, .gemini/rules/
+├── <span class="file">commands/</span>           <span class="arrow">──→</span>    .claude/commands/, .gemini/commands/
+├── <span class="file">skills/</span>             <span class="arrow">──→</span>    .claude/skills/, .agents/skills/
+├── <span class="file">workflows/</span>          <span class="arrow">──→</span>    .agents/workflows/
+├── <span class="file">settings/</span>
+│   ├── claude.json     <span class="arrow">──→</span>    .claude/settings.json
+│   └── gemini.json     <span class="arrow">──→</span>    .gemini/settings.json
+└── <span class="file">ignore/</span>
+    ├── .aiignore       <span class="arrow">──→</span>    .geminiignore
+    └── .codeiumignore  <span class="arrow">──→</span>    .codeiumignore</div>
+    </div>
+  </section>
+
+  <!-- Quick Start -->
+  <section id="quick-start">
+    <div class="container">
+      <div class="section-label">Quick start</div>
+      <h2>Up and running in 30 seconds</h2>
+      <div class="code-block"><span class="comment"># Install globally</span>
+<span class="prompt">$</span> npm install -g @nbslabs/dotai
+
+<span class="comment"># Initialize in your project</span>
+<span class="prompt">$</span> cd your-project
+<span class="prompt">$</span> dotai init
+
+<span class="comment"># That's it — .ai/ is your single source of truth</span>
+<span class="comment"># Symlinks are created for all selected tools</span></div>
+      <div class="code-block"><span class="comment"># After cloning a dotai-managed repo</span>
+<span class="prompt">$</span> dotai link    <span class="comment"># recreates all symlinks from .ai/</span></div>
+    </div>
+  </section>
+
+  <!-- Supported Tools -->
+  <section id="tools">
+    <div class="container">
+      <div class="section-label">Supported tools</div>
+      <h2>7 tools. One config.</h2>
+      <p>Every major AI coding tool is supported out of the box.</p>
+      <div class="cards">
+        <div class="card">
+          <h3>Claude Code <span class="badge">.claude/</span></h3>
+          <p>AI.md → CLAUDE.md, settings, commands, skills</p>
+        </div>
+        <div class="card">
+          <h3>Gemini CLI <span class="badge">.gemini/</span></h3>
+          <p>AI.md → GEMINI.md, settings, commands, ignore</p>
+        </div>
+        <div class="card">
+          <h3>Cursor <span class="badge">.cursor/</span></h3>
+          <p>Rules directory symlink</p>
+        </div>
+        <div class="card">
+          <h3>GitHub Copilot <span class="badge">.github/</span></h3>
+          <p>AI.md → copilot-instructions.md, prompts, instructions</p>
+        </div>
+        <div class="card">
+          <h3>Windsurf <span class="badge">.windsurf/</span></h3>
+          <p>AI.md → AGENTS.md, rules, ignore</p>
+        </div>
+        <div class="card">
+          <h3>Codex CLI <span class="badge">.codex/</span></h3>
+          <p>AI.md → AGENTS.md, global skills</p>
+        </div>
+        <div class="card">
+          <h3>Antigravity <span class="badge">.gemini/</span></h3>
+          <p>AI.md → GEMINI.md, settings, rules, workflows, skills</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Symlink Mapping -->
+  <section id="mapping">
+    <div class="container">
+      <div class="section-label">Symlink mapping</div>
+      <h2>Full mapping reference</h2>
+      <p>What you edit in <code>.ai/</code> and where each tool reads it from.</p>
+      <div style="overflow-x:auto; border: 1px solid var(--border); border-radius: var(--radius);">
+        <table class="mapping-table">
+          <thead>
+            <tr>
+              <th>You edit</th>
+              <th>Tool sees</th>
+              <th>Used by</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code class="src">AI.md</code></td><td><code class="tgt">CLAUDE.md</code></td><td>Claude Code</td></tr>
+            <tr><td><code class="src">AI.md</code></td><td><code class="tgt">GEMINI.md</code></td><td>Gemini CLI / Antigravity</td></tr>
+            <tr><td><code class="src">AI.md</code></td><td><code class="tgt">AGENTS.md</code></td><td>Windsurf, Codex</td></tr>
+            <tr><td><code class="src">AI.md</code></td><td><code class="tgt">.github/copilot-instructions.md</code></td><td>GitHub Copilot</td></tr>
+            <tr><td><code class="src">rules/</code></td><td><code class="tgt">.cursor/rules/</code></td><td>Cursor</td></tr>
+            <tr><td><code class="src">rules/</code></td><td><code class="tgt">.windsurf/rules/</code></td><td>Windsurf</td></tr>
+            <tr><td><code class="src">rules/</code></td><td><code class="tgt">.gemini/rules/</code></td><td>Antigravity</td></tr>
+            <tr><td><code class="src">commands/</code></td><td><code class="tgt">.claude/commands/</code></td><td>Claude Code</td></tr>
+            <tr><td><code class="src">commands/</code></td><td><code class="tgt">.gemini/commands/</code></td><td>Gemini CLI</td></tr>
+            <tr><td><code class="src">skills/</code></td><td><code class="tgt">.claude/skills/</code></td><td>Claude Code</td></tr>
+            <tr><td><code class="src">skills/</code></td><td><code class="tgt">.agents/skills/</code></td><td>Antigravity</td></tr>
+            <tr><td><code class="src">workflows/</code></td><td><code class="tgt">.agents/workflows/</code></td><td>Antigravity</td></tr>
+            <tr><td><code class="src">settings/claude.json</code></td><td><code class="tgt">.claude/settings.json</code></td><td>Claude Code</td></tr>
+            <tr><td><code class="src">settings/gemini.json</code></td><td><code class="tgt">.gemini/settings.json</code></td><td>Gemini / Antigravity</td></tr>
+            <tr><td><code class="src">ignore/.aiignore</code></td><td><code class="tgt">.geminiignore</code></td><td>Gemini CLI</td></tr>
+            <tr><td><code class="src">ignore/.codeiumignore</code></td><td><code class="tgt">.codeiumignore</code></td><td>Windsurf</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Commands -->
+  <section id="commands">
+    <div class="container">
+      <div class="section-label">CLI Commands</div>
+      <h2>9 commands to manage everything</h2>
+      <p>Every command supports <code>--help</code> for detailed usage.</p>
+      <div style="overflow-x:auto; border: 1px solid var(--border); border-radius: var(--radius);">
+        <table class="cmd-table">
+          <thead>
+            <tr><th>Command</th><th>Description</th><th>Flags</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>dotai init</code></td>
+              <td>Scaffold <code>.ai/</code> directory and create <code>.dotai.json</code></td>
+              <td>
+                <code>-y, --yes</code> skip prompts, use defaults<br>
+                <code>--tools &lt;list&gt;</code> comma-separated tool IDs<br>
+                <code>--dir &lt;path&gt;</code> custom AI directory (default: <code>.ai</code>)<br>
+                <code>--no-link</code> skip symlinking after init<br>
+                <code>--dry-run</code> preview without writing
+              </td>
+            </tr>
+            <tr>
+              <td><code>dotai link [tools...]</code></td>
+              <td>Create symlinks for specified or all configured tools</td>
+              <td>
+                <code>--force</code> overwrite existing files<br>
+                <code>--backup</code> back up files before replacing<br>
+                <code>--no-backup</code> skip backup even with --force<br>
+                <code>--dry-run</code> preview without writing
+              </td>
+            </tr>
+            <tr>
+              <td><code>dotai unlink [tools...]</code></td>
+              <td>Remove symlinks, optionally restore originals</td>
+              <td>
+                <code>--restore</code> restore backed-up files<br>
+                <code>--no-restore</code> don't restore backups<br>
+                <code>--dry-run</code> preview without writing
+              </td>
+            </tr>
+            <tr>
+              <td><code>dotai status</code></td>
+              <td>Show the current state of every symlink</td>
+              <td>
+                <code>--json</code> output as JSON<br>
+                <code>--tool &lt;id&gt;</code> filter by tool
+              </td>
+            </tr>
+            <tr>
+              <td><code>dotai add &lt;tool&gt;</code></td>
+              <td>Add a new tool to an existing project</td>
+              <td>
+                <code>--link</code> auto-create symlinks after adding<br>
+                <code>--dry-run</code> preview without writing
+              </td>
+            </tr>
+            <tr>
+              <td><code>dotai remove &lt;tool&gt;</code></td>
+              <td>Remove a tool and clean up its symlinks</td>
+              <td>
+                <code>--keep-files</code> keep symlinked files<br>
+                <code>--purge</code> remove tool-specific templates
+              </td>
+            </tr>
+            <tr>
+              <td><code>dotai list</code></td>
+              <td>List all supported tools and their link status</td>
+              <td>
+                <code>--all</code> show all tools (incl. unconfigured)<br>
+                <code>--json</code> output as JSON
+              </td>
+            </tr>
+            <tr>
+              <td><code>dotai sync</code></td>
+              <td>Re-evaluate and repair all symlinks</td>
+              <td>
+                <code>--tools &lt;list&gt;</code> comma-separated tools to sync<br>
+                <code>--dry-run</code> preview without writing
+              </td>
+            </tr>
+            <tr>
+              <td><code>dotai doctor</code></td>
+              <td>Run diagnostics and auto-fix issues</td>
+              <td>
+                <code>--fix</code> auto-fix all found issues<br>
+                <code>--tool &lt;id&gt;</code> check specific tool only<br>
+                <code>--json</code> output as JSON
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Platform -->
+  <section id="platform">
+    <div class="container">
+      <div class="section-label">Platform support</div>
+      <h2>Works everywhere</h2>
+      <div class="cards" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+        <div class="card">
+          <h3>🍎 macOS</h3>
+          <p>Standard filesystem symlinks. Works out of the box.</p>
+        </div>
+        <div class="card">
+          <h3>🐧 Linux</h3>
+          <p>Standard filesystem symlinks. Works out of the box.</p>
+        </div>
+        <div class="card">
+          <h3>🪟 Windows</h3>
+          <p>NTFS junctions for dirs, symlinks for files. No admin needed on Win 10+.</p>
+        </div>
+      </div>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 20px;">
+        All symlinks use <strong>relative paths</strong> for portability — move or clone the repo anywhere.
+      </p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>
+        Built by <a href="https://github.com/nbslabs">nbslabs</a> ·
+        <a href="https://github.com/nbslabs/dotai-cli">GitHub</a> ·
+        <a href="https://www.npmjs.com/package/@nbslabs/dotai">npm</a> ·
+        MIT License
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    function copyInstall(btn) {
+      navigator.clipboard.writeText('npm install -g @nbslabs/dotai').then(() => {
+        btn.classList.add('copied');
+        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+        }, 2000);
+      });
+    }
+  </script>
+
+</body>
+</html>
