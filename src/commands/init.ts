@@ -7,6 +7,7 @@ import { getToolChoices, getGitignoreEntries, getAllToolIds, getToolById } from 
 import { scaffoldAiDir, updateGitignore } from '../core/scaffold'
 import { createSymlink } from '../core/symlink'
 import { pathExists } from '../utils/fs'
+import { VERSION } from '../version'
 
 interface InitArgs {
   yes?: boolean
@@ -52,7 +53,7 @@ export const initCommand: CommandModule<{}, InitArgs> = {
       const noLink = argv['no-link'] || false
       const useDefaults = argv.yes || false
 
-      logger.title(`dotai v1.0.0`)
+      logger.title(`dotai v${VERSION}`)
       logger.newline()
       logger.info(`Initializing AI config in ${projectRoot}`)
       logger.newline()

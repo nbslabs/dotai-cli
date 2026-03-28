@@ -4,6 +4,7 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import { readConfig, writeConfig, createDefaultConfig, findProjectRoot, markToolLinked, markToolUnlinked } from '../src/core/config'
 import { pathExists } from '../src/utils/fs'
+import { VERSION } from '../src/version'
 
 describe('config', () => {
   let tmpDir: string
@@ -19,7 +20,7 @@ describe('config', () => {
   describe('createDefaultConfig', () => {
     it('creates config with specified tools', () => {
       const config = createDefaultConfig(['claude', 'gemini'])
-      expect(config.version).toBe('1.0.0')
+      expect(config.version).toBe(VERSION)
       expect(config.tools).toEqual(['claude', 'gemini'])
       expect(config.aiDir).toBe('.ai')
       expect(config.links.claude).toEqual({ linked: false })

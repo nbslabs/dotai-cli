@@ -10,11 +10,12 @@ import { removeCommand } from './commands/remove'
 import { listCommand } from './commands/list'
 import { syncCommand } from './commands/sync'
 import { doctorCommand } from './commands/doctor'
+import { VERSION } from './version'
 
 const cli = yargs(hideBin(process.argv))
   .scriptName('dotai')
   .usage('$0 <command> [options]')
-  .version()
+  .version(VERSION)
   .alias('v', 'version')
   .help()
   .alias('h', 'help')

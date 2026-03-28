@@ -1,5 +1,6 @@
 import { join } from 'path'
 import { readJsonFile, writeJsonFile, pathExists } from '../utils/fs'
+import { VERSION } from '../version'
 
 export interface ToolLinkState {
   linked: boolean
@@ -39,7 +40,7 @@ export function createDefaultConfig(tools: string[], aiDir = '.ai'): DotAiConfig
     links[tool] = { linked: false }
   }
   return {
-    version: '1.0.0',
+    version: VERSION,
     tools,
     aiDir,
     links,
