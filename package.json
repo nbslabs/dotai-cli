@@ -1,5 +1,5 @@
 {
-  "name": "dotai",
+  "name": "@nbslabs/dotai",
   "version": "1.0.0",
   "description": "One .ai/ folder to rule all AI coding tool configs",
   "bin": {

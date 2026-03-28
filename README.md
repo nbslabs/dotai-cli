@@ -4,8 +4,8 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/dotai"><img src="https://img.shields.io/npm/v/dotai.svg" alt="npm version"></a>
-  <a href="https://www.npmjs.com/package/dotai"><img src="https://img.shields.io/npm/dm/dotai.svg" alt="npm downloads"></a>
+  <a href="https://www.npmjs.com/package/@nbslabs/dotai"><img src="https://img.shields.io/npm/v/@nbslabs/dotai.svg" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@nbslabs/dotai"><img src="https://img.shields.io/npm/dm/@nbslabs/dotai.svg" alt="npm downloads"></a>
   <a href="https://github.com/nbslabs/dotai-cli/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license"></a>
   <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg" alt="node version"></a>
 </p>
@@ -42,7 +42,7 @@ One file to write. Seven tools that read it. Zero drift.
 
 ```bash
 # Install globally
-npm install -g dotai
+npm install -g @nbslabs/dotai
 
 # Initialize in your project
 cd your-project
@@ -181,7 +181,7 @@ All symlinks use **relative paths** for portability — move or clone the repo a
 When a teammate clones the repo, they just run:
 
 ```bash
-npm install -g dotai  # if not already installed
+npm install -g @nbslabs/dotai  # if not already installed
 dotai link            # recreates all symlinks from .ai/
 ```
 
