@@ -553,7 +553,7 @@
 <span class="comment"># That's it — .ai/ is your single source of truth</span>
 <span class="comment"># Symlinks are created for all selected tools</span></div>
       <div class="code-block"><span class="comment"># After cloning a dotai-managed repo</span>
-<span class="prompt">$</span> dotai link    <span class="comment"># recreates all symlinks from .ai/</span></div>
+<span class="prompt">$</span> dotai init    <span class="comment"># reads .dotai.json, scaffolds missing files, links everything</span></div>
     </div>
   </section>
 
@@ -648,7 +648,7 @@
           <tbody>
             <tr>
               <td><code>dotai init</code></td>
-              <td>Scaffold <code>.ai/</code> directory and create <code>.dotai.json</code></td>
+              <td>Scaffold <code>.ai/</code> directory, or restore from existing <code>.dotai.json</code></td>
               <td>
                 <code>-y, --yes</code> skip prompts, use defaults<br>
                 <code>--tools &lt;list&gt;</code> comma-separated tool IDs<br>

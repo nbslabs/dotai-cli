@@ -11,6 +11,7 @@ export interface DotAiConfig {
   version: string
   tools: string[]
   aiDir: string
+  gitignore: boolean
   links: Record<string, ToolLinkState>
 }
 
@@ -43,6 +44,7 @@ export function createDefaultConfig(tools: string[], aiDir = '.ai'): DotAiConfig
     version: VERSION,
     tools,
     aiDir,
+    gitignore: true,
     links,
   }
 }

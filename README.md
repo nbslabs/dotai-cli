@@ -74,7 +74,7 @@ dotai init
 
 | Command | Description |
 |---|---|
-| `dotai init` | Scaffold `.ai/` directory and create `.dotai.json` config |
+| `dotai init` | Scaffold `.ai/` directory, or restore from existing `.dotai.json` |
 | `dotai link [tools...]` | Create symlinks for specified or all configured tools |
 | `dotai unlink [tools...]` | Remove symlinks, optionally restore backed-up originals |
 | `dotai status` | Show the current state of every symlink |
@@ -98,13 +98,19 @@ dotai init
 
 ## Usage
 
+### Initialize a new project (interactive)
+```bash
+dotai init
+```
+
 ### Initialize with defaults (selects all tools except Codex)
 ```bash
 dotai init --yes
 ```
 
-### Pick specific tools interactively
+### Restore from `.dotai.json` after cloning
 ```bash
+# If .dotai.json exists, dotai init reads it and sets up everything automatically
 dotai init
 ```
 
@@ -182,8 +188,10 @@ When a teammate clones the repo, they just run:
 
 ```bash
 npm install -g @nbslabs/dotai  # if not already installed
-dotai link            # recreates all symlinks from .ai/
+dotai init            # reads .dotai.json, scaffolds missing files, links everything
 ```
+
+`dotai init` detects the existing `.dotai.json` and automatically sets up the project — no prompts, no tool selection. Just like `npm install` reads `package.json`.
 
 ## Git Integration
 

@@ -48,21 +48,112 @@ export const initCommand: CommandModule<{}, InitArgs> = {
   handler: async (argv) => {
     try {
       const projectRoot = process.cwd()
-      const aiDir = argv.dir || '.ai'
       const dryRun = argv['dry-run'] || false
       const noLink = argv['no-link'] || false
       const useDefaults = argv.yes || false
+      const explicitTools = argv.tools
 
       logger.title(`dotai v${VERSION}`)
       logger.newline()
+
+      // Check if .dotai.json exists
+      const existingConfig = await readConfig(projectRoot)
+
+      // ── Bootstrap from existing .dotai.json ──
+      // If config exists and user didn't pass --tools (not a reinit), auto-setup
+      if (existingConfig && !explicitTools) {
+        const aiDir = existingConfig.aiDir || '.ai'
+        const selectedTools = existingConfig.tools
+
+        logger.info(`Found .dotai.json — restoring project for ${selectedTools.length} tool(s)`)
+        logger.newline()
+
+        if (selectedTools.length === 0) {
+          logger.warn('No tools configured in .dotai.json.')
+          return
+        }
+
+        if (dryRun) {
+          logger.info('[DRY RUN] Would create the following:')
+          logger.newline()
+        }
+
+        // Scaffold any missing .ai/ files (won't overwrite existing)
+        logger.plain('Scaffolding missing .ai/ files...')
+        await scaffoldAiDir(projectRoot, {
+          projectName: basename(projectRoot),
+          projectDescription: '',
+          aiDir,
+          tools: selectedTools,
+        })
+
+        // Link tools
+        if (!noLink && !dryRun) {
+          logger.newline()
+          logger.plain('Linking tools...')
+
+          const config = { ...existingConfig }
+
+          for (const toolId of selectedTools) {
+            const tool = getToolById(toolId)
+            if (!tool) continue
+
+            const aiPath = join(projectRoot, aiDir)
+            let toolLinked = false
+
+            for (const link of tool.links) {
+              const source = join(aiPath, link.source)
+              const target = join(projectRoot, link.target)
+
+              if (!link.required && !(await pathExists(source))) {
+                continue
+              }
+
+              const result = await createSymlink(source, target, { force: false })
+              if (result.status === 'created' || result.status === 'already-linked') {
+                toolLinked = true
+              }
+            }
+
+            if (toolLinked) {
+              markToolLinked(config, toolId)
+              const shortTarget = tool.links[0]
+                ? `${tool.links[0].target} → ${aiDir}/${tool.links[0].source}`
+                : tool.dirName
+              logger.success(`${tool.id.padEnd(10)} ${shortTarget}`)
+            }
+          }
+
+          await writeConfig(projectRoot, config)
+        }
+
+        // Update .gitignore (only if configured — defaults to true for older configs)
+        if (!dryRun && (existingConfig.gitignore !== false)) {
+          const gitignoreEntries = getGitignoreEntries(selectedTools)
+          if (gitignoreEntries.length > 0) {
+            const count = await updateGitignore(projectRoot, gitignoreEntries)
+            if (count > 0) {
+              logger.newline()
+              logger.success(`Updated .gitignore (+${count} entries)`)
+            }
+          }
+        }
+
+        logger.newline()
+        logger.success('Done! Project restored from .dotai.json — all tools linked.')
+        return
+      }
+
+      // ── Fresh init or reinit with --tools ──
+      const aiDir = argv.dir || '.ai'
+
       logger.info(`Initializing AI config in ${projectRoot}`)
       logger.newline()
 
-      // Check if already initialized
-      const existingConfig = await readConfig(projectRoot)
-      if (existingConfig) {
+      // If config exists and --tools was passed, confirm reinit
+      if (existingConfig && explicitTools) {
         if (!useDefaults) {
-          const proceed = await promptConfirm('Project already initialized. Reinitialize?', false)
+          const proceed = await promptConfirm('Project already initialized. Reinitialize with new tools?', false)
           if (!proceed) {
             logger.dim('Aborted.')
             return
@@ -72,8 +163,8 @@ export const initCommand: CommandModule<{}, InitArgs> = {
 
       // Select tools
       let selectedTools: string[]
-      if (argv.tools) {
-        selectedTools = argv.tools.split(',').map((t) => t.trim())
+      if (explicitTools) {
+        selectedTools = explicitTools.split(',').map((t) => t.trim())
       } else if (useDefaults) {
         selectedTools = getAllToolIds().filter((id) => id !== 'codex')
       } else {
@@ -172,6 +263,11 @@ export const initCommand: CommandModule<{}, InitArgs> = {
               true
             )
           }
+
+          // Save gitignore preference to config
+          config.gitignore = shouldUpdate
+          await writeConfig(projectRoot, config)
+
           if (shouldUpdate) {
             const count = await updateGitignore(projectRoot, gitignoreEntries)
             if (count > 0) {

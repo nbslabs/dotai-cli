@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-04-01
+
+### Added
+- **`dotai init` now bootstraps from existing `.dotai.json`** — when `.dotai.json` is present, `dotai init` reads it and automatically scaffolds missing files + creates all symlinks without prompts, similar to how `npm install` works with `package.json`
+- After cloning a dotai-managed repo, teammates just run `dotai init` — no need to pick tools or configure anything
+
+### Changed
+- `dotai init` with `--tools` flag while `.dotai.json` exists triggers a reinit flow (updates config with new tools)
+
 ## [1.0.2] - 2026-03-28
 
 ### Fixed
