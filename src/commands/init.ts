@@ -4,7 +4,7 @@ import { logger } from '../utils/logger'
 import { promptCheckbox, promptInput, promptConfirm } from '../utils/prompt'
 import { readConfig, writeConfig, createDefaultConfig, markToolLinked, findProjectRoot } from '../core/config'
 import { getToolChoices, getGitignoreEntries, getAllToolIds, getToolById } from '../core/registry'
-import { scaffoldAiDir, updateGitignore } from '../core/scaffold'
+import { scaffoldAiDir, updateGitignore, collectExistingInstructions } from '../core/scaffold'
 import { createSymlink } from '../core/symlink'
 import { pathExists } from '../utils/fs'
 import { VERSION } from '../version'
@@ -196,6 +196,9 @@ export const initCommand: CommandModule<{}, InitArgs> = {
         logger.newline()
       }
 
+      // Collect content from existing instruction files (CLAUDE.md, GEMINI.md, etc.)
+      const existingContent = await collectExistingInstructions(projectRoot)
+
       // Scaffold .ai/ directory
       logger.plain('Creating .ai/ structure...')
       const createdFiles = await scaffoldAiDir(projectRoot, {
@@ -203,6 +206,7 @@ export const initCommand: CommandModule<{}, InitArgs> = {
         projectDescription,
         aiDir,
         tools: selectedTools,
+        existingContent: existingContent || undefined,
       })
 
       // Create .dotai.json

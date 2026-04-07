@@ -1,6 +1,6 @@
 {
   "name": "@nbslabs/dotai",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "One .ai/ folder to rule all AI coding tool configs",
   "bin": {
     "dotai": "./dist/index.js"
@@ -42,7 +42,9 @@
   "dependencies": {
     "yargs": "^17.7.2",
     "@inquirer/prompts": "^7.2.1",
-    "picocolors": "^1.1.1"
+    "picocolors": "^1.1.1",
+    "chokidar": "^4.0.3",
+    "ignore": "^6.0.2"
   },
   "devDependencies": {
     "typescript": "^5.7.3",

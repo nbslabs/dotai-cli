@@ -1,9 +1,22 @@
 {
   "version": "1.0.0",
-  "tools": ["claude", "gemini"],
+  "tools": [
+    "claude",
+    "gemini"
+  ],
   "aiDir": ".ai",
   "links": {
-    "claude": { "linked": false },
-    "gemini": { "linked": false }
+    "claude": {
+      "linked": false
+    },
+    "gemini": {
+      "linked": false
+    }
+  },
+  "knowledge": {
+    "enabled": true,
+    "scanDepth": 2,
+    "excludePatterns": [],
+    "autoUpdateOnCommit": false
   }
 }
