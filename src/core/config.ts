@@ -1,6 +1,7 @@
 import { join } from 'path'
 import { readJsonFile, writeJsonFile, pathExists } from '../utils/fs'
 import { VERSION } from '../version'
+import type { KnowledgeConfig } from './knowledge/types'
 
 export interface ToolLinkState {
   linked: boolean
@@ -13,6 +14,7 @@ export interface DotAiConfig {
   aiDir: string
   gitignore: boolean
   links: Record<string, ToolLinkState>
+  knowledge?: KnowledgeConfig    // NEW — optional for backward compat
 }
 
 const CONFIG_FILE = '.dotai.json'
@@ -90,4 +92,13 @@ export async function findProjectRoot(startDir?: string): Promise<string | null>
 
   // If nothing found, use cwd
   return process.cwd()
+}
+
+export function getKnowledgeConfig(config: DotAiConfig): KnowledgeConfig {
+  return config.knowledge ?? {
+    enabled: false,
+    scanDepth: 2,
+    excludePatterns: [],
+    autoUpdateOnCommit: false,
+  }
 }

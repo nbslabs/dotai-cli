@@ -1,6 +1,6 @@
 <p align="center">
   <h1 align="center">dotai</h1>
-  <p align="center"><strong>One <code>.ai/</code> folder. All your AI tools. Always in sync.</strong></p>
+  <p align="center"><strong>One <code>.ai/</code> folder. All your AI tools. Always in sync. Always in context.</strong></p>
 </p>
 
 <p align="center">
@@ -15,6 +15,20 @@
 AI coding tools each expect their own config directory — `.claude/`, `.gemini/`, `.cursor/`, `.github/`, `.windsurf/`, `.codex/`, `.agents/`. **dotai** creates a single `.ai/` directory as your source of truth and symlinks everything to where each tool expects it.
 
 Edit one file. Every tool stays in sync.
+
+## What's New in v2.0.0 — Persistent Agent Memory
+
+AI agents reset their memory every conversation. They re-explore your codebase from
+scratch each time — wasting context, wasting tokens, missing accumulated insights.
+
+**dotai v2 solves this** with a persistent knowledge layer:
+
+```bash
+dotai knowledge scan          # one-time: scan your codebase
+dotai knowledge hook install  # auto-update knowledge on every commit
+```
+
+Now every conversation starts with your codebase already understood.
 
 ## Why dotai?
 
@@ -62,6 +76,7 @@ dotai init
 ├── commands/           ──→    .claude/commands/, .gemini/commands/
 ├── skills/             ──→    .claude/skills/, .agents/skills/, .codex/skills/
 ├── workflows/          ──→    .agents/workflows/
+├── knowledge/          ──→    .claude/knowledge/, .gemini/knowledge/, .github/knowledge/
 ├── settings/
 │   ├── claude.json     ──→    .claude/settings.json
 │   └── gemini.json     ──→    .gemini/settings.json
@@ -88,13 +103,165 @@ dotai init
 
 | ID | Tool | Native Dir | What Gets Symlinked |
 |---|---|---|---|
-| `claude` | Claude Code | `.claude/` | AI.md → CLAUDE.md, settings, commands, skills |
-| `gemini` | Gemini CLI | `.gemini/` | AI.md → GEMINI.md, settings, commands, ignore |
+| `claude` | Claude Code | `.claude/` | AI.md, settings, commands, skills, **knowledge** |
+| `gemini` | Gemini CLI | `.gemini/` | AI.md, settings, commands, ignore, **knowledge** |
 | `cursor` | Cursor | `.cursor/` | rules |
-| `copilot` | GitHub Copilot | `.github/` | AI.md → copilot-instructions.md, prompts, instructions |
+| `copilot` | GitHub Copilot | `.github/` | AI.md, prompts, instructions, **knowledge** |
 | `windsurf` | Windsurf | `.windsurf/` | AI.md → AGENTS.md, rules, ignore |
 | `codex` | OpenAI Codex CLI | `.codex/` | AI.md → AGENTS.md, global skills |
-| `antigravity` | Antigravity | `.gemini/` | AI.md → GEMINI.md, settings, rules, workflows, skills |
+| `antigravity` | Antigravity | `.gemini/` | AI.md, settings, rules, workflows, skills, **knowledge** |
+
+## Knowledge Base
+
+`dotai knowledge` builds and maintains a persistent codebase memory layer at `.ai/knowledge/`.
+
+### Quick Start
+
+```bash
+dotai knowledge scan          # scan codebase → .ai/knowledge/
+dotai knowledge hook install  # auto-update after each git commit
+```
+
+### Step 2: Populate with Your AI Agent
+
+`dotai knowledge scan` creates the knowledge **skeleton** — module files, an index,
+and basic exports. But the deep insights (architecture, patterns, gotchas) come from
+your **AI agent** using the dotai MCP tools.
+
+Open your AI agent (Gemini, Claude, Antigravity, Cursor, etc.) and use one of these prompts:
+
+**Full knowledge population:**
+```
+Use knowledge_explore to analyze the entire codebase directory by directory.
+For each module, use knowledge_append to persist patterns, gotchas, and insights.
+Then use knowledge_populate_ai_md to fill in the AI.md with project overview,
+architecture, tech stack, key commands, constraints, and common pitfalls.
+```
+
+**Quick module deep-dive:**
+```
+Use knowledge_explore to read src/core/ and analyze the code deeply. Persist
+every non-obvious finding (hidden dependencies, edge cases, patterns) using
+knowledge_append. Focus on things that would surprise a new developer.
+```
+
+**AI.md population only:**
+```
+Explore the codebase using knowledge_explore, then call knowledge_populate_ai_md
+to fill in the Project Overview, Architecture, Tech Stack, Key Commands,
+Important Constraints, and Common Pitfalls sections of AI.md.
+```
+
+> **Why two steps?** The CLI scanner is fast but shallow — it extracts exports,
+> file structure, and dependencies. AI agents understand *semantics* — they can
+> identify patterns, gotchas, and architectural decisions that no static scanner can.
+
+### Knowledge Commands
+
+| Command | Description |
+|---|---|
+| `dotai knowledge scan` | Full codebase scan → generate/update knowledge files |
+| `dotai knowledge scan --module <path>` | Incremental scan of one module |
+| `dotai knowledge update` | Update from last git commit changes |
+| `dotai knowledge watch` | Watch mode — update on file save |
+| `dotai knowledge serve` | MCP stdio server (runs independently, no init required) |
+| `dotai knowledge hook install` | Install git post-commit hook (auto-amends knowledge into commits) |
+| `dotai knowledge hook uninstall` | Remove git post-commit hook |
+| `dotai knowledge status` | Show knowledge base health + staleness |
+| `dotai knowledge append` | Add a finding to gotchas or a module |
+| `dotai knowledge clean` | Delete knowledge base (re-scan fresh) |
+
+### MCP Integration
+
+The MCP server runs **independently** — no `dotai init` required. It auto-creates
+the knowledge directory if missing. Add to `.ai/settings/claude.json`:
+
+```json
+{
+  "mcpServers": {
+    "dotai-knowledge": {
+      "command": "npx",
+      "args": ["dotai", "knowledge", "serve", "--stdio"]
+    }
+  }
+}
+```
+
+> **IDE tools (Antigravity, Cursor)**: Add `"--project", "/path/to/your/project"`
+> to the `args` array. IDE-spawned processes may not use your project as the working directory.
+
+Agents then have access to 7 MCP tools:
+
+| Tool | Direction | Description |
+|------|-----------|-------------|
+| `knowledge_query` | 📖 Read | Search the knowledge base by keyword |
+| `knowledge_get_module` | 📖 Read | Get full summary of a specific module |
+| `knowledge_list_modules` | 📖 Read | List all indexed modules |
+| `knowledge_recent_changes` | 📖 Read | Get recent codebase changes |
+| `knowledge_append` | Write | Persist a finding (auto-creates missing files) |
+| `knowledge_explore` | 📖 Read | Read source files for deep AI analysis |
+| `knowledge_populate_ai_md` | ✏️ Write | Update AI.md project sections from codebase analysis |
+
+### Auto-Persist: How Agents Write Back
+
+The `AI.md` template includes a **mandatory auto-persist rule**. When an agent
+reads or modifies code and discovers something non-obvious (a gotcha, a hidden
+dependency, a pattern), it is instructed to **immediately** call `knowledge_append`
+without waiting for user prompts.
+
+Persistence happens during the session as a side-effect of work — not at session
+close. This means knowledge accumulates across conversations automatically:
+
+```
+Session 1:  Agent discovers 10 things → persists 8 → knowledge base grows
+Session 2:  Agent reads knowledge → starts smart → discovers more → persists again
+Session 3:  Even richer context from line one
+```
+
+Agents can also be prompted explicitly:
+```
+/learn The PaymentService.processRefund() requires ROLE_ADMIN — calling without it throws 403 silently
+```
+
+### Troubleshooting: nvm + IDE-based tools
+
+If Node.js is installed via **nvm**, IDE-spawned tools (Antigravity, Cursor) can't find `npx`
+because they don't load `.bashrc`. Use the full path + explicit `env` in your settings JSON:
+
+```json
+{
+  "mcpServers": {
+    "dotai-knowledge": {
+      "command": "/home/YOUR_USER/.nvm/versions/node/vXX.XX.X/bin/npx",
+      "args": ["dotai", "knowledge", "serve", "--stdio", "--project", "/path/to/your/project"],
+      "env": {
+        "PATH": "/home/YOUR_USER/.nvm/versions/node/vXX.XX.X/bin:/usr/local/bin:/usr/bin:/bin"
+      }
+    }
+  }
+}
+```
+
+Find your path: `which npx`
+
+### Developer Workflow
+
+**One-time setup:**
+```bash
+dotai init                        # 1. create .ai/ + symlinks
+dotai knowledge scan              # 2. generate knowledge skeleton
+dotai knowledge hook install      # 3. auto-update on every commit
+# 4. Ask your agent: "Explore the codebase and populate the knowledge base"
+```
+
+**Daily workflow:**
+```
+Code normally → git commit → hook auto-updates knowledge + amends silently
+→ Open AI agent → reads knowledge → starts smart → discovers more → auto-persists
+```
+
+> The git hook amends knowledge changes into each commit automatically.
+> No extra commits, no dirty diffs.
 
 ## Usage
 
@@ -102,6 +269,10 @@ dotai init
 ```bash
 dotai init
 ```
+
+> **Note:** If you have existing `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, or
+> `.github/copilot-instructions.md` files, `dotai init` automatically detects them
+> and imports their content into `.ai/AI.md` — nothing is lost.
 
 ### Initialize with defaults (selects all tools except Codex)
 ```bash
