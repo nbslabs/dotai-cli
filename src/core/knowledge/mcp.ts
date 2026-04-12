@@ -422,7 +422,7 @@ export class KnowledgeMcpServer {
   ): Promise<string> {
     const SKIP_DIRS = new Set([
       'node_modules', '.git', 'dist', 'build', 'out', 'target',
-      '.ai', '.claude', '.gemini', '.cursor', '.windsurf', '.codex', '.agents',
+      '.ai', '.claude', '.gemini', '.agents',
       '__pycache__', '.venv', 'venv', '.next', '.nuxt',
     ])
 

@@ -1,6 +1,6 @@
 {
   "name": "@nbslabs/dotai",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "One .ai/ folder to rule all AI coding tool configs",
   "bin": {
     "dotai": "./dist/index.js"
@@ -26,10 +26,8 @@
     "ai",
     "claude",
     "gemini",
-    "cursor",
     "copilot",
-    "windsurf",
-    "codex",
+    "antigravity",
     "cli",
     "config",
     "symlink"

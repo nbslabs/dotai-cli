@@ -7,7 +7,7 @@ import { pathExists } from '../../utils/fs'
 
 const SKIP_DIRS = new Set([
   'node_modules', '.git', 'dist', 'build', 'out', 'target',
-  '.ai', '.claude', '.gemini', '.cursor', '.windsurf', '.codex', '.agents',
+  '.ai', '.claude', '.gemini', '.agents',
   '.github', '__pycache__', '.venv', 'venv', '.next', '.nuxt',
 ])
 

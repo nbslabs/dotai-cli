@@ -2,6 +2,49 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2026-04-13
+
+### Removed
+- **Cursor** tool support — `.cursor/` directory, rules symlink, and `cursor-rule.mdc` template
+- **Windsurf** tool support — `.windsurf/` directory, rules symlink, AGENTS.md symlink, `.codeiumignore` ignore file and template
+- **OpenAI Codex CLI** tool support — `.codex/` directory, AGENTS.md symlink, global skills link
+
+### Fixed
+- **Gemini CLI commands format**: Commands now use a separate `commands-gemini/` directory with `.toml` files (Gemini CLI requires TOML format, not the `.md` format used by Claude Code)
+- **Gemini CLI skills missing**: Added `skills → .gemini/skills` symlink (Gemini CLI supports skills at `.gemini/skills/`)
+- **Copilot skills missing**: Added `skills → .github/skills` symlink (GitHub Copilot supports skills at `.github/skills/`)
+- **Antigravity AGENTS.md missing**: Added `AI.md → AGENTS.md` symlink for Antigravity (reads both `GEMINI.md` and `AGENTS.md` natively)
+
+### Added
+- `commands-gemini/` directory in `.ai/` scaffold with `review.toml` and `deploy.toml` template files
+- `AGENTS.md` added to Antigravity's `.gitignore` entries
+
+### Changed
+- **4 supported tools**: Gemini CLI, Antigravity, Claude Code, GitHub Copilot (previously 7)
+- `dotai init --yes` now selects all 4 tools (previously excluded Codex)
+- `getToolChoices()` marks all tools as checked by default (no more Codex exception)
+- `EXISTING_INSTRUCTION_FILES` no longer checks for `AGENTS.md` during init
+- All skip-directory lists (scanner, MCP explore, watcher) updated to remove `.cursor/`, `.windsurf/`, `.codex/`
+- Gemini CLI `commands` link source changed from `commands` (shared with Claude) to `commands-gemini` (separate `.toml` files)
+- Skills now symlinked to all 4 tools: Claude (`.claude/skills/`), Gemini CLI (`.gemini/skills/`), Antigravity (`.agents/skills/`), Copilot (`.github/skills/`)
+- DOTAI.md template, AI.md references, and all documentation updated for 4-tool focus
+- `docs/index.html` updated to reflect new tool set
+- README.md, docs/index.html updated to reflect all mapping changes
+- Registry, tests, README, and package.json keywords cleaned up
+
+### Upgrade from v2.0.x
+
+> **Existing repos**: After upgrading dotai, run `dotai init` in your project. This will:
+> 1. Scaffold the new `.ai/commands-gemini/` directory with `.toml` templates (without overwriting existing files)
+> 2. Create new symlinks: `AGENTS.md`, `.gemini/skills/`, `.github/skills/`
+> 3. The old `commands → .gemini/commands` symlink (now stale) can be removed manually or via `dotai doctor --fix`
+>
+> ```bash
+> npm install -g @nbslabs/dotai   # upgrade
+> cd your-project
+> dotai init                       # re-scaffolds missing dirs + re-links
+> ```
+
 ## [2.0.0] - 2026-04-08
 
 ### Added

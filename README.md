@@ -12,23 +12,20 @@
 
 ---
 
-AI coding tools each expect their own config directory — `.claude/`, `.gemini/`, `.cursor/`, `.github/`, `.windsurf/`, `.codex/`, `.agents/`. **dotai** creates a single `.ai/` directory as your source of truth and symlinks everything to where each tool expects it.
+AI coding tools each expect their own config directory — `.claude/`, `.gemini/`, `.github/`, `.agents/`. **dotai** creates a single `.ai/` directory as your source of truth and symlinks everything to where each tool expects it.
 
 Edit one file. Every tool stays in sync.
 
-## What's New in v2.0.0 — Persistent Agent Memory
+## What's New in v2.1.0 — Focused Tool Support
 
-AI agents reset their memory every conversation. They re-explore your codebase from
-scratch each time — wasting context, wasting tokens, missing accumulated insights.
+dotai now targets the 4 most impactful AI coding tools:
 
-**dotai v2 solves this** with a persistent knowledge layer:
+- **Gemini CLI** — Google's CLI-based AI assistant
+- **Antigravity** — Google's IDE-integrated AI agent
+- **Claude Code** — Anthropic's terminal-native coding assistant
+- **GitHub Copilot** — GitHub's AI pair programmer
 
-```bash
-dotai knowledge scan          # one-time: scan your codebase
-dotai knowledge hook install  # auto-update knowledge on every commit
-```
-
-Now every conversation starts with your codebase already understood.
+Cursor, Windsurf, and Codex support has been removed to maintain a focused, high-quality experience.
 
 ## Why dotai?
 
@@ -37,10 +34,7 @@ Without dotai, you juggle:
 ```
 CLAUDE.md            ← Claude Code reads this
 GEMINI.md            ← Gemini CLI reads this
-AGENTS.md            ← Windsurf & Codex read this
 .github/copilot-instructions.md  ← Copilot reads this
-.cursor/rules/       ← Cursor reads this
-.windsurf/rules/     ← Windsurf reads this
 .gemini/rules/       ← Antigravity reads this
 ```
 
@@ -50,7 +44,7 @@ With dotai:
 .ai/AI.md  →  symlinked to all of the above
 ```
 
-One file to write. Seven tools that read it. Zero drift.
+One file to write. Four tools that read it. Zero drift.
 
 ## Quick Start
 
@@ -72,17 +66,18 @@ dotai init
 ├── AI.md               ──→    CLAUDE.md, GEMINI.md, AGENTS.md,
 │                               .github/copilot-instructions.md
 ├── DOTAI.md                   Quick reference guide (this explains your setup)
-├── rules/              ──→    .cursor/rules/, .windsurf/rules/, .gemini/rules/
-├── commands/           ──→    .claude/commands/, .gemini/commands/
-├── skills/             ──→    .claude/skills/, .agents/skills/, .codex/skills/
+├── rules/              ──→    .gemini/rules/
+├── commands/           ──→    .claude/commands/
+├── commands-gemini/    ──→    .gemini/commands/ (Gemini uses .toml format)
+├── skills/             ──→    .claude/skills/, .gemini/skills/,
+│                               .agents/skills/, .github/skills/
 ├── workflows/          ──→    .agents/workflows/
 ├── knowledge/          ──→    .claude/knowledge/, .gemini/knowledge/, .github/knowledge/
 ├── settings/
 │   ├── claude.json     ──→    .claude/settings.json
 │   └── gemini.json     ──→    .gemini/settings.json
 └── ignore/
-    ├── .aiignore       ──→    .geminiignore
-    └── .codeiumignore  ──→    .codeiumignore
+    └── .aiignore       ──→    .geminiignore
 ```
 
 ## Commands
@@ -104,12 +99,9 @@ dotai init
 | ID | Tool | Native Dir | What Gets Symlinked |
 |---|---|---|---|
 | `claude` | Claude Code | `.claude/` | AI.md, settings, commands, skills, **knowledge** |
-| `gemini` | Gemini CLI | `.gemini/` | AI.md, settings, commands, ignore, **knowledge** |
-| `cursor` | Cursor | `.cursor/` | rules |
-| `copilot` | GitHub Copilot | `.github/` | AI.md, prompts, instructions, **knowledge** |
-| `windsurf` | Windsurf | `.windsurf/` | AI.md → AGENTS.md, rules, ignore |
-| `codex` | OpenAI Codex CLI | `.codex/` | AI.md → AGENTS.md, global skills |
-| `antigravity` | Antigravity | `.gemini/` | AI.md, settings, rules, workflows, skills, **knowledge** |
+| `gemini` | Gemini CLI | `.gemini/` | AI.md, settings, commands (.toml), skills, ignore, **knowledge** |
+| `copilot` | GitHub Copilot | `.github/` | AI.md, prompts, instructions, skills, **knowledge** |
+| `antigravity` | Antigravity | `.gemini/` | AI.md, AGENTS.md, settings, rules, workflows, skills, **knowledge** |
 
 ## Knowledge Base
 
@@ -128,7 +120,7 @@ dotai knowledge hook install  # auto-update after each git commit
 and basic exports. But the deep insights (architecture, patterns, gotchas) come from
 your **AI agent** using the dotai MCP tools.
 
-Open your AI agent (Gemini, Claude, Antigravity, Cursor, etc.) and use one of these prompts:
+Open your AI agent (Gemini, Claude, Antigravity, etc.) and use one of these prompts:
 
 **Full knowledge population:**
 ```
@@ -187,7 +179,7 @@ the knowledge directory if missing. Add to `.ai/settings/claude.json`:
 }
 ```
 
-> **IDE tools (Antigravity, Cursor)**: Add `"--project", "/path/to/your/project"`
+> **IDE tools (Antigravity)**: Add `"--project", "/path/to/your/project"`
 > to the `args` array. IDE-spawned processes may not use your project as the working directory.
 
 Agents then have access to 7 MCP tools:
@@ -225,7 +217,7 @@ Agents can also be prompted explicitly:
 
 ### Troubleshooting: nvm + IDE-based tools
 
-If Node.js is installed via **nvm**, IDE-spawned tools (Antigravity, Cursor) can't find `npx`
+If Node.js is installed via **nvm**, IDE-spawned tools (Antigravity) can't find `npx`
 because they don't load `.bashrc`. Use the full path + explicit `env` in your settings JSON:
 
 ```json
@@ -270,11 +262,11 @@ Code normally → git commit → hook auto-updates knowledge + amends silently
 dotai init
 ```
 
-> **Note:** If you have existing `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, or
+> **Note:** If you have existing `CLAUDE.md`, `GEMINI.md`, or
 > `.github/copilot-instructions.md` files, `dotai init` automatically detects them
 > and imports their content into `.ai/AI.md` — nothing is lost.
 
-### Initialize with defaults (selects all tools except Codex)
+### Initialize with defaults (selects all tools)
 ```bash
 dotai init --yes
 ```
@@ -287,7 +279,7 @@ dotai init
 
 ### Initialize with specific tools
 ```bash
-dotai init --tools claude,gemini,cursor
+dotai init --tools claude,gemini,copilot
 ```
 
 ### Check symlink health
@@ -312,7 +304,7 @@ dotai link --force --backup
 
 ### Remove a tool
 ```bash
-dotai remove windsurf
+dotai remove gemini
 ```
 
 ## The `.ai/AI.md` File
@@ -368,7 +360,7 @@ dotai init            # reads .dotai.json, scaffolds missing files, links everyt
 
 - ✅ **Commit** the `.ai/` directory — it is your source of truth
 - ✅ **Commit** `.dotai.json` — it tracks which tools are configured
-- ❌ **Don't commit** `.claude/`, `.gemini/`, `.cursor/`, etc. — dotai adds them to `.gitignore` automatically
+- ❌ **Don't commit** `.claude/`, `.gemini/`, etc. — dotai adds them to `.gitignore` automatically
 
 ## Development
 
