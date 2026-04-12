@@ -22,16 +22,3 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
-
-# dotai managed symlinks (recreated via `dotai link`)
-.claude/
-.gemini/
-.cursor/
-.windsurf/
-.codex/
-.agents/
-CLAUDE.md
-GEMINI.md
-AGENTS.md
-.geminiignore
-.codeiumignore
