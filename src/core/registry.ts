@@ -17,7 +17,6 @@ export interface ToolDefinition {
   dirName: string      // the native dir name (e.g. ".claude")
   docsUrl: string
   links: ToolLink[]
-  globalLinks?: ToolLink[]  // links to HOME dir (e.g. ~/.codex/)
   gitignore: string[]  // entries to add to .gitignore
 }
 
@@ -87,11 +86,18 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
         description: 'Gemini CLI settings',
       },
       {
-        source: 'commands',
+        source: 'commands-gemini',
         target: '.gemini/commands',
         strategy: { type: 'dir-symlink' },
         required: false,
-        description: 'Gemini custom commands',
+        description: 'Gemini custom commands (.toml format)',
+      },
+      {
+        source: 'skills',
+        target: '.gemini/skills',
+        strategy: { type: 'dir-symlink' },
+        required: false,
+        description: 'Gemini CLI skill packages',
       },
       {
         source: 'ignore/.aiignore',
@@ -110,22 +116,7 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     ],
     gitignore: ['.gemini/', 'GEMINI.md', '.geminiignore'],
   },
-  {
-    id: 'cursor',
-    name: 'Cursor',
-    dirName: '.cursor',
-    docsUrl: 'https://docs.cursor.com',
-    links: [
-      {
-        source: 'rules',
-        target: '.cursor/rules',
-        strategy: { type: 'dir-symlink' },
-        required: false,
-        description: 'Cursor rules directory',
-      },
-    ],
-    gitignore: ['.cursor/'],
-  },
+
   {
     id: 'copilot',
     name: 'GitHub Copilot',
@@ -154,6 +145,13 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
         description: 'Copilot prompt files',
       },
       {
+        source: 'skills',
+        target: '.github/skills',
+        strategy: { type: 'dir-symlink' },
+        required: false,
+        description: 'Copilot skill packages',
+      },
+      {
         source: 'knowledge',
         target: '.github/knowledge',
         strategy: { type: 'dir-symlink' },
@@ -163,61 +161,7 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     ],
     gitignore: ['.github/knowledge'],
   },
-  {
-    id: 'windsurf',
-    name: 'Windsurf',
-    dirName: '.windsurf',
-    docsUrl: 'https://docs.windsurf.com',
-    links: [
-      {
-        source: 'rules',
-        target: '.windsurf/rules',
-        strategy: { type: 'dir-symlink' },
-        required: false,
-        description: 'Windsurf rules directory',
-      },
-      {
-        source: 'AI.md',
-        target: 'AGENTS.md',
-        strategy: { type: 'file-symlink' },
-        required: true,
-        description: 'Universal agent instructions (→ AI.md)',
-      },
-      {
-        source: 'ignore/.codeiumignore',
-        target: '.codeiumignore',
-        strategy: { type: 'file-symlink' },
-        required: false,
-        description: 'Windsurf ignore file',
-      },
-    ],
-    gitignore: ['.windsurf/', 'AGENTS.md', '.codeiumignore'],
-  },
-  {
-    id: 'codex',
-    name: 'OpenAI Codex CLI',
-    dirName: '.codex',
-    docsUrl: 'https://github.com/openai/codex',
-    links: [
-      {
-        source: 'AI.md',
-        target: 'AGENTS.md',
-        strategy: { type: 'file-symlink' },
-        required: true,
-        description: 'Universal agent instructions (→ AI.md)',
-      },
-    ],
-    globalLinks: [
-      {
-        source: 'skills',
-        target: '.codex/skills',
-        strategy: { type: 'dir-symlink' },
-        required: false,
-        description: 'Codex global skills directory',
-      },
-    ],
-    gitignore: ['.codex/'],
-  },
+
   {
     id: 'antigravity',
     name: 'Antigravity',
@@ -230,6 +174,13 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
         strategy: { type: 'file-symlink' },
         required: true,
         description: 'Antigravity instructions file (→ AI.md)',
+      },
+      {
+        source: 'AI.md',
+        target: 'AGENTS.md',
+        strategy: { type: 'file-symlink' },
+        required: false,
+        description: 'Antigravity AGENTS.md cross-tool standard (→ AI.md)',
       },
       {
         source: 'settings/gemini.json',
@@ -267,7 +218,7 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
         description: 'Persistent codebase knowledge base',
       },
     ],
-    gitignore: ['.agents/'],
+    gitignore: ['.agents/', 'AGENTS.md'],
   },
 ]
 
@@ -287,7 +238,7 @@ export function getToolChoices(): { name: string; value: string; checked: boolea
   return TOOL_REGISTRY.map((t) => ({
     name: t.name,
     value: t.id,
-    checked: t.id !== 'codex', // All except Codex checked by default
+    checked: true,
   }))
 }
 

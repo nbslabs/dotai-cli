@@ -10,7 +10,6 @@ import { logger } from '../utils/logger'
 const EXISTING_INSTRUCTION_FILES = [
   { path: 'CLAUDE.md', tool: 'Claude Code' },
   { path: 'GEMINI.md', tool: 'Gemini CLI' },
-  { path: 'AGENTS.md', tool: 'Windsurf / Codex' },
   { path: '.github/copilot-instructions.md', tool: 'GitHub Copilot' },
 ]
 
@@ -238,18 +237,7 @@ alwaysApply: false
 - Use descriptive test names that explain the expected behavior
 `,
 
-    'cursor-rule.mdc': `---
-description: General coding rules for this project
-alwaysApply: true
-globs:
----
 
-# General Rules
-
-- Follow the conventions in AGENTS.md
-- Write clean, readable code with meaningful names
-- Add comments for non-obvious logic only
-`,
 
     'settings-claude.json': `{
   "permissions": {
@@ -284,12 +272,7 @@ build/
 *.log
 `,
 
-    'codeiumignore': `# Windsurf-specific ignore patterns
-node_modules/
-dist/
-build/
-.env
-`,
+
 
     'review.md': `# /review Command
 
@@ -308,6 +291,31 @@ Guide through the deployment process:
 3. Check environment configuration
 4. Deploy to the target environment
 `,
+
+    'review.toml': `description = "Review code changes and provide feedback"
+prompt = """
+Review the current code changes and provide:
+1. A summary of changes
+2. Potential issues or bugs
+3. Suggestions for improvement
+4. Security concerns if any
+
+{{args}}
+"""
+`,
+
+    'deploy.toml': `description = "Guide through the deployment process"
+prompt = """
+Guide through the deployment process:
+1. Run all tests
+2. Build the project
+3. Check environment configuration
+4. Deploy to the target environment
+
+{{args}}
+"""
+`,
+
 
     'example-skill.md': `# Example Skill
 
@@ -438,7 +446,7 @@ dotai knowledge scan
 
 ## What is dotai?
 
-dotai manages your AI coding tool configurations from a single \`.ai/\` folder. Instead of maintaining separate config files for Claude, Gemini, Cursor, Copilot, Windsurf, Codex, and Antigravity — you edit files in \`.ai/\` once and dotai symlinks them to where each tool expects them.
+dotai manages your AI coding tool configurations from a single \`.ai/\` folder. Instead of maintaining separate config files for Claude, Gemini, Copilot, and Antigravity — you edit files in \`.ai/\` once and dotai symlinks them to where each tool expects them.
 
 ## Generated Structure
 
@@ -450,10 +458,13 @@ dotai manages your AI coding tool configurations from a single \`.ai/\` folder. 
 │   ├── general.md          ← Always-on general coding rules
 │   ├── security.md         ← Security-focused rules
 │   └── testing.md          ← Testing conventions
-├── commands/               ← Custom slash commands
+├── commands/               ← Custom slash commands (Claude Code, .md)
 │   ├── review.md           ← /review command
 │   ├── deploy.md           ← /deploy command
 │   └── learn.md            ← /learn command (agent write-back)
+├── commands-gemini/        ← Custom commands for Gemini CLI (.toml)
+│   ├── review.toml         ← /review command
+│   └── deploy.toml         ← /deploy command
 ├── skills/                 ← Reusable skill packages
 │   └── example-skill/
 │       └── SKILL.md
@@ -466,7 +477,7 @@ dotai manages your AI coding tool configurations from a single \`.ai/\` folder. 
 ├── instructions/           ← Copilot path-specific instructions
 ├── ignore/                 ← Ignore patterns for AI tools
 │   ├── .aiignore           ← Global ignore (all tools)
-│   └── .codeiumignore      ← Windsurf-specific ignore
+
 └── knowledge/              ← Persistent agent memory layer
     ├── INDEX.md            ← High-level codebase map
     ├── patterns.md         ← Recurring code patterns
@@ -484,15 +495,15 @@ When you run \`dotai link\`, symlinks are created so each tool reads from \`.ai/
 |-----------------------------|--------------------------------------|----------------------|
 | \`AI.md\`                     | \`CLAUDE.md\`                          | Claude Code          |
 | \`AI.md\`                     | \`GEMINI.md\`                          | Gemini CLI / Antigravity |
-| \`AI.md\`                     | \`AGENTS.md\`                          | Windsurf, Codex      |
+| \`AI.md\`                     | \`AGENTS.md\`                          | Antigravity          |
 | \`AI.md\`                     | \`.github/copilot-instructions.md\`    | GitHub Copilot       |
-| \`rules/\`                    | \`.cursor/rules/\`                     | Cursor               |
-| \`rules/\`                    | \`.windsurf/rules/\`                   | Windsurf             |
 | \`rules/\`                    | \`.gemini/rules/\`                     | Antigravity          |
 | \`commands/\`                 | \`.claude/commands/\`                  | Claude Code          |
-| \`commands/\`                 | \`.gemini/commands/\`                  | Gemini CLI           |
+| \`commands-gemini/\`          | \`.gemini/commands/\`                  | Gemini CLI           |
 | \`skills/\`                   | \`.claude/skills/\`                    | Claude Code          |
+| \`skills/\`                   | \`.gemini/skills/\`                    | Gemini CLI           |
 | \`skills/\`                   | \`.agents/skills/\`                    | Antigravity          |
+| \`skills/\`                   | \`.github/skills/\`                    | GitHub Copilot       |
 | \`workflows/\`                | \`.agents/workflows/\`                 | Antigravity          |
 | \`knowledge/\`                | \`.claude/knowledge/\`                 | Claude Code          |
 | \`knowledge/\`                | \`.gemini/knowledge/\`                 | Gemini / Antigravity |
@@ -500,7 +511,6 @@ When you run \`dotai link\`, symlinks are created so each tool reads from \`.ai/
 | \`settings/claude.json\`      | \`.claude/settings.json\`              | Claude Code          |
 | \`settings/gemini.json\`      | \`.gemini/settings.json\`              | Gemini CLI / Antigravity |
 | \`ignore/.aiignore\`          | \`.geminiignore\`                      | Gemini CLI           |
-| \`ignore/.codeiumignore\`     | \`.codeiumignore\`                     | Windsurf             |
 
 ## Knowledge Base (v2.0.0+)
 
@@ -581,7 +591,7 @@ This gives agents access to 7 MCP tools:
 | \`knowledge_explore\` | Read | Read source files for deep AI analysis |
 | \`knowledge_populate_ai_md\` | Write | Update AI.md project sections from analysis |
 
-### Troubleshooting: nvm + IDE-based tools (Antigravity, Cursor)
+### Troubleshooting: nvm + IDE-based tools (Antigravity)
 
 If Node.js is installed via **nvm**, IDE-based tools may not find \`npx\`
 because they don't load \`.bashrc\`. Fix by using the full path in your settings JSON:
@@ -608,10 +618,10 @@ Find your path with: \`which npx\`
 This is the most important file. Write your project context, architecture, tech stack, conventions, and constraints here. Every AI tool will see this content.
 
 ### Add rules: \`.ai/rules/\`
-Add \`.md\` files for coding rules. Each rule file has YAML frontmatter with \`description\` and \`alwaysApply\` fields. Tools like Cursor and Windsurf read these automatically.
+Add \`.md\` files for coding rules. Each rule file has YAML frontmatter with \`description\` and \`alwaysApply\` fields.
 
-### Custom commands: \`.ai/commands/\`
-Define slash commands that Claude and Gemini can execute. Each \`.md\` file becomes a \`/command\`.
+### Custom commands: \`.ai/commands/\` and \`.ai/commands-gemini/\`
+Claude Code uses \`.md\` files in \`commands/\`. Gemini CLI uses \`.toml\` files in \`commands-gemini/\`. Each file becomes a slash command.
 
 ### Workflows: \`.ai/workflows/\`
 Define step-by-step workflows for Antigravity. Each \`.md\` file has a \`description\` in YAML frontmatter and markdown steps.
@@ -671,13 +681,15 @@ export async function scaffoldAiDir(
     { relPath: 'commands/review.md', templateName: 'review.md', content: '' },
     { relPath: 'commands/deploy.md', templateName: 'deploy.md', content: '' },
     { relPath: 'commands/learn.md', templateName: 'learn.md', content: '' },
+    { relPath: 'commands-gemini/review.toml', templateName: 'review.toml', content: '', toolSpecific: ['gemini'] },
+    { relPath: 'commands-gemini/deploy.toml', templateName: 'deploy.toml', content: '', toolSpecific: ['gemini'] },
     { relPath: 'skills/example-skill/SKILL.md', templateName: 'example-skill.md', content: '' },
     { relPath: 'prompts/example.prompt.md', templateName: 'example-prompt.md', content: '', toolSpecific: ['copilot'] },
     { relPath: 'instructions/backend.instructions.md', templateName: 'backend-instructions.md', content: '', toolSpecific: ['copilot'] },
     { relPath: 'settings/claude.json', templateName: 'settings-claude.json', content: '', toolSpecific: ['claude'] },
     { relPath: 'settings/gemini.json', templateName: 'settings-gemini.json', content: '', toolSpecific: ['gemini', 'antigravity'] },
     { relPath: 'ignore/.aiignore', templateName: 'aiignore', content: '' },
-    { relPath: 'ignore/.codeiumignore', templateName: 'codeiumignore', content: '', toolSpecific: ['windsurf'] },
+
     { relPath: 'workflows/example.md', templateName: 'example-workflow.md', content: '', toolSpecific: ['antigravity'] },
     { relPath: 'knowledge/INDEX.md', templateName: 'knowledge-index.md', content: '' },
     { relPath: 'knowledge/patterns.md', templateName: 'knowledge-patterns.md', content: '' },
@@ -689,6 +701,7 @@ export async function scaffoldAiDir(
   await ensureDir(aiPath)
   await ensureDir(join(aiPath, 'rules'))
   await ensureDir(join(aiPath, 'commands'))
+  await ensureDir(join(aiPath, 'commands-gemini'))
   await ensureDir(join(aiPath, 'skills', 'example-skill'))
   await ensureDir(join(aiPath, 'prompts'))
   await ensureDir(join(aiPath, 'instructions'))

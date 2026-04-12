@@ -85,7 +85,7 @@ describe('scaffold', () => {
         projectName: 'TestProject',
         projectDescription: '',
         aiDir: '.ai',
-        tools: ['claude', 'gemini', 'copilot', 'windsurf'],
+        tools: ['claude', 'gemini', 'copilot', 'antigravity'],
       })
 
       expect(await pathExists(join(tmpDir, '.ai', 'rules'))).toBe(true)

@@ -88,7 +88,6 @@ export const removeCommand: CommandModule<{}, RemoveArgs> = {
             claude: ['CLAUDE.md', 'settings/claude.json'],
             gemini: ['GEMINI.md', 'settings/gemini.json'],
             copilot: ['instructions', 'prompts'],
-            windsurf: ['ignore/.codeiumignore'],
           }
 
           const filesToDelete = toolSpecificFiles[toolId] || []

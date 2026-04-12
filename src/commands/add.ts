@@ -20,7 +20,7 @@ export const addCommand: CommandModule<{}, AddArgs> = {
     yargs
       .positional('tool', {
         type: 'string',
-        description: 'Tool ID: claude | gemini | cursor | copilot | windsurf | codex',
+        description: 'Tool ID: claude | gemini | copilot | antigravity',
         demandOption: true,
       })
       .option('link', {

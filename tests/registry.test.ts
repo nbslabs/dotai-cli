@@ -10,18 +10,15 @@ import {
 
 describe('registry', () => {
   describe('TOOL_REGISTRY', () => {
-    it('contains all 7 tools', () => {
-      expect(TOOL_REGISTRY).toHaveLength(7)
+    it('contains all 4 tools', () => {
+      expect(TOOL_REGISTRY).toHaveLength(4)
     })
 
     it('has correct tool IDs', () => {
       const ids = TOOL_REGISTRY.map((t) => t.id)
       expect(ids).toContain('claude')
       expect(ids).toContain('gemini')
-      expect(ids).toContain('cursor')
       expect(ids).toContain('copilot')
-      expect(ids).toContain('windsurf')
-      expect(ids).toContain('codex')
       expect(ids).toContain('antigravity')
     })
 
@@ -58,23 +55,21 @@ describe('registry', () => {
     it('gemini has correct link mappings', () => {
       const gemini = getToolById('gemini')!
       expect(gemini.links.some((l) => l.source === 'AI.md' && l.target === 'GEMINI.md')).toBe(true)
+      expect(gemini.links.some((l) => l.source === 'commands-gemini' && l.target === '.gemini/commands')).toBe(true)
+      expect(gemini.links.some((l) => l.source === 'skills' && l.target === '.gemini/skills')).toBe(true)
       expect(gemini.links.some((l) => l.target === '.geminiignore')).toBe(true)
     })
 
     it('copilot links to .github/ directory', () => {
       const copilot = getToolById('copilot')!
       expect(copilot.links.some((l) => l.source === 'AI.md' && l.target === '.github/copilot-instructions.md')).toBe(true)
+      expect(copilot.links.some((l) => l.source === 'skills' && l.target === '.github/skills')).toBe(true)
     })
 
-    it('codex has global links', () => {
-      const codex = getToolById('codex')!
-      expect(codex.globalLinks).toBeDefined()
-      expect(codex.globalLinks!.length).toBeGreaterThan(0)
-    })
-
-    it('antigravity has workflows and skills links', () => {
+    it('antigravity has workflows, skills, and AGENTS.md links', () => {
       const ag = getToolById('antigravity')!
       expect(ag.links.some((l) => l.source === 'AI.md' && l.target === 'GEMINI.md')).toBe(true)
+      expect(ag.links.some((l) => l.source === 'AI.md' && l.target === 'AGENTS.md')).toBe(true)
       expect(ag.links.some((l) => l.target === '.agents/workflows')).toBe(true)
       expect(ag.links.some((l) => l.target === '.agents/skills')).toBe(true)
       expect(ag.links.some((l) => l.target === '.gemini/rules')).toBe(true)
@@ -91,12 +86,18 @@ describe('registry', () => {
     it('returns undefined for invalid ID', () => {
       expect(getToolById('invalid')).toBeUndefined()
     })
+
+    it('returns undefined for removed tools', () => {
+      expect(getToolById('cursor')).toBeUndefined()
+      expect(getToolById('windsurf')).toBeUndefined()
+      expect(getToolById('codex')).toBeUndefined()
+    })
   })
 
   describe('getAllToolIds', () => {
-    it('returns all 7 tool IDs', () => {
+    it('returns all 4 tool IDs', () => {
       const ids = getAllToolIds()
-      expect(ids).toHaveLength(7)
+      expect(ids).toHaveLength(4)
     })
   })
 
@@ -110,18 +111,25 @@ describe('registry', () => {
       expect(isValidToolId('invalid')).toBe(false)
       expect(isValidToolId('')).toBe(false)
     })
+
+    it('returns false for removed tool IDs', () => {
+      expect(isValidToolId('cursor')).toBe(false)
+      expect(isValidToolId('windsurf')).toBe(false)
+      expect(isValidToolId('codex')).toBe(false)
+    })
   })
 
   describe('getToolChoices', () => {
     it('returns choices for all tools', () => {
       const choices = getToolChoices()
-      expect(choices).toHaveLength(7)
+      expect(choices).toHaveLength(4)
     })
 
-    it('codex is unchecked by default', () => {
+    it('all tools are checked by default', () => {
       const choices = getToolChoices()
-      const codex = choices.find((c) => c.value === 'codex')
-      expect(codex!.checked).toBe(false)
+      for (const choice of choices) {
+        expect(choice.checked).toBe(true)
+      }
     })
 
     it('claude is checked by default', () => {
@@ -146,10 +154,10 @@ describe('registry', () => {
     })
 
     it('deduplicates entries', () => {
-      // windsurf and codex both have AGENTS.md
-      const entries = getGitignoreEntries(['windsurf', 'codex'])
-      const agentsCount = entries.filter((e) => e === 'AGENTS.md').length
-      expect(agentsCount).toBeLessThanOrEqual(1)
+      // claude and gemini both have knowledge symlinks
+      const entries = getGitignoreEntries(['claude', 'gemini'])
+      const uniqueEntries = new Set(entries)
+      expect(uniqueEntries.size).toBe(entries.length)
     })
   })
 })

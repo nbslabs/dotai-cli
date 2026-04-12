@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>dotai — Unified AI Coding Tool Config & Knowledge Manager</title>
-  <meta name="description" content="Manage all your AI coding tool configs and codebase knowledge from a single .ai folder. Sync Claude, Gemini, Cursor, Copilot, and more with dotai CLI.">
-  <meta name="keywords" content="dotai, AI, CLI, Claude, Gemini, Cursor, Copilot, Windsurf, Codex, Antigravity, config, symlink, developer tools, MCP, machine context protocol">
+  <meta name="description" content="Manage all your AI coding tool configs and codebase knowledge from a single .ai folder. Sync Claude, Gemini, Copilot, Antigravity and more with dotai CLI.">
+  <meta name="keywords" content="dotai, AI, CLI, Claude, Gemini, Copilot, Antigravity, config, symlink, developer tools, MCP, machine context protocol">
   <link rel="canonical" href="https://dotai.nbslabs.dev/">
   <meta name="robots" content="index, follow">
 
   <!-- Open Graph -->
   <meta property="og:title" content="dotai — Unified AI Coding Tool Config & Knowledge Manager">
-  <meta property="og:description" content="Manage all your AI coding tool configs and codebase knowledge from a single .ai folder. Sync Claude, Gemini, Cursor, Copilot, and more with dotai CLI.">
+  <meta property="og:description" content="Manage all your AI coding tool configs and codebase knowledge from a single .ai folder. Sync Claude, Gemini, Copilot, Antigravity and more with dotai CLI.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://dotai.nbslabs.dev/">
   <meta property="og:site_name" content="dotai">
@@ -19,7 +19,7 @@
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="dotai — Unified AI Coding Tool Config & Knowledge Manager">
-  <meta name="twitter:description" content="Manage all your AI coding tool configs and codebase knowledge from a single .ai folder. Sync Claude, Gemini, Cursor, Copilot, and more with dotai CLI.">
+  <meta name="twitter:description" content="Manage all your AI coding tool configs and codebase knowledge from a single .ai folder. Sync Claude, Gemini, Copilot, Antigravity and more with dotai CLI.">
 
   <!-- Structured Data -->
   <script type="application/ld+json">
@@ -29,13 +29,13 @@
       "name": "dotai",
       "operatingSystem": "Windows, macOS, Linux",
       "applicationCategory": "DeveloperApplication",
-      "description": "One .ai folder to manage all your AI coding tool configurations and persistent codebase knowledge using symlinks. Supports Claude, Gemini, Cursor, Copilot, Windsurf, Codex, and Antigravity.",
+      "description": "One .ai folder to manage all your AI coding tool configurations and persistent codebase knowledge using symlinks. Supports Claude, Gemini, Copilot, and Antigravity.",
       "offers": {
         "@type": "Offer",
         "price": "0",
         "priceCurrency": "USD"
       },
-      "softwareVersion": "2.0.0",
+      "softwareVersion": "2.1.0",
       "license": "https://opensource.org/licenses/MIT"
     }
   </script>
@@ -64,19 +64,17 @@
       --mono: 'JetBrains Mono', 'Fira Code', monospace;
     }
 
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0f0f1a;
-        --surface: #1a1a2e;
-        --text: #e2e8f0;
-        --text-secondary: #94a3b8;
-        --accent: #818cf8;
-        --accent-light: #a5b4fc;
-        --accent-bg: #1e1b4b;
-        --border: #2d2d44;
-        --code-bg: #16162a;
-        --green: #34d399;
-      }
+    [data-theme="dark"] {
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --text: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --accent: #818cf8;
+      --accent-light: #a5b4fc;
+      --accent-bg: #1e1b4b;
+      --border: #2d2d44;
+      --code-bg: #16162a;
+      --green: #34d399;
     }
 
     html { scroll-behavior: smooth; }
@@ -153,6 +151,45 @@
     .nav-links .btn-primary:hover {
       background: var(--accent-light);
       color: #fff;
+    }
+
+    /* ── Theme Toggle ── */
+    .theme-toggle {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .theme-toggle:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--accent-bg);
+    }
+
+    .theme-toggle .icon-sun { display: none; }
+    .theme-toggle .icon-moon { display: block; }
+    [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+    [data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+    /* ── Version Badge ── */
+    .nav-version {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-bg);
+      padding: 2px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+      line-height: 1.4;
     }
 
     /* ── Container ── */
@@ -479,6 +516,178 @@
 
     footer a:hover { text-decoration: underline; }
 
+    /* ── Docs CTA Card ── */
+    .docs-cta {
+      background: var(--surface);
+      border: 2px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 48px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .docs-cta::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 5%, transparent), color-mix(in srgb, var(--accent) 15%, transparent));
+      z-index: 0;
+    }
+
+    .docs-cta > * { position: relative; z-index: 1; }
+
+    .docs-cta h2 { font-size: 1.5rem; margin-bottom: 12px; }
+
+    .docs-cta p {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      margin-bottom: 28px;
+    }
+
+    .docs-cta .btn-docs {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 14px 32px;
+      border-radius: 10px;
+      transition: background 0.15s, transform 0.15s;
+    }
+
+    .docs-cta .btn-docs:hover {
+      background: var(--accent-light);
+      transform: translateY(-1px);
+    }
+
+    /* ── FAQ Accordion ── */
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .faq-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .faq-item:hover { border-color: var(--accent); }
+
+    .faq-item[open] {
+      box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 10%, transparent);
+      border-color: var(--accent);
+    }
+
+    .faq-item summary {
+      padding: 20px 24px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      user-select: none;
+      transition: color 0.15s;
+    }
+
+    .faq-item summary::-webkit-details-marker { display: none; }
+
+    .faq-item summary::after {
+      content: '';
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+      transition: transform 0.25s ease;
+    }
+
+    .faq-item[open] summary::after { transform: rotate(180deg); }
+    .faq-item summary:hover { color: var(--accent); }
+
+    .faq-answer {
+      padding: 0 24px 24px;
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+      line-height: 1.7;
+    }
+
+    .faq-answer p { margin-bottom: 14px; }
+    .faq-answer p:last-child { margin-bottom: 0; }
+
+    .faq-answer code {
+      font-family: var(--mono);
+      font-size: 0.84rem;
+      background: var(--accent-bg);
+      color: var(--accent);
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+
+    .faq-answer ul, .faq-answer ol { padding-left: 20px; margin-bottom: 14px; }
+    .faq-answer li { margin-bottom: 6px; }
+    .faq-answer strong { color: var(--text); }
+
+    .faq-answer .faq-note {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 0.88rem;
+      margin-top: 16px;
+    }
+
+    .faq-answer .faq-note strong { color: var(--accent); }
+
+    /* ── Knowledge Feature Cards ── */
+    .knowledge-highlights {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 40px;
+    }
+
+    .kh-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      text-align: center;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .kh-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .kh-icon {
+      font-size: 2rem;
+      margin-bottom: 14px;
+    }
+
+    .kh-card h3 {
+      font-size: 1.05rem;
+      margin-bottom: 8px;
+    }
+
+    .kh-card p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
     /* ── Responsive ── */
     @media (max-width: 640px) {
       .hero { padding: 120px 0 60px; }
@@ -486,8 +695,10 @@
       .diagram { font-size: 0.75rem; padding: 20px; }
       .nav-links a.hide-mobile { display: none; }
       .cards { grid-template-columns: 1fr; }
-      .mapping-table { font-size: 0.78rem; }
-      .mapping-table th, .mapping-table td { padding: 8px 10px; }
+      .knowledge-highlights { grid-template-columns: 1fr; }
+      .docs-cta { padding: 36px 24px; }
+      .faq-item summary { padding: 16px 18px; font-size: 0.95rem; }
+      .faq-answer { padding: 0 18px 18px; }
     }
   </style>
 </head>
@@ -500,12 +711,17 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" role="img" aria-labelledby="logo-title"><title id="logo-title">dotai logo</title><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         <span>dot</span>ai
       </a>
+      <span class="nav-version">v2.1.0</span>
       <div class="nav-links">
         <a href="#how-it-works" class="hide-mobile">How it works</a>
         <a href="#tools" class="hide-mobile">Tools</a>
-        <a href="#knowledge" class="hide-mobile">Knowledge</a>
-        <a href="#commands" class="hide-mobile">Commands</a>
         <a href="#workflow" class="hide-mobile">Workflow</a>
+        <a href="#faq" class="hide-mobile">FAQ</a>
+        <a href="docs.html" class="hide-mobile">Docs</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark/light theme">
+          <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
         <a href="https://github.com/nbslabs/dotai-cli" class="btn-primary">GitHub</a>
       </div>
     </div>
@@ -514,7 +730,7 @@
   <!-- Hero -->
   <div class="hero">
     <div class="container">
-      <div class="hero-badge">✦ v2.0.0 — Open Source CLI Tool</div>
+      <div class="hero-badge">✦ v2.1.0 — Open Source CLI Tool</div>
       <h1>
         One <code>.ai/</code> folder.<br>
         <span class="gradient">All your AI tools.</span><br>
@@ -522,7 +738,7 @@
       </h1>
       <p>
         Stop maintaining separate config files for every AI coding tool.
-        dotai manages Claude, Gemini, Cursor, Copilot, Windsurf, Codex &amp; Antigravity from a single directory using symlinks — with a persistent codebase knowledge layer that gives every AI agent instant context.
+        dotai manages Claude, Gemini, Copilot &amp; Antigravity from a single directory using symlinks — with a persistent codebase knowledge layer that gives every AI agent instant context.
       </p>
       <div class="hero-actions">
         <a href="https://github.com/nbslabs/dotai-cli" class="btn btn-hero">
@@ -555,17 +771,18 @@
       <div class="diagram"><span class="file">.ai/</span>                           <span class="comment">← Your source of truth (committed to git)</span>
 ├── <span class="file">AI.md</span>               <span class="arrow">──→</span>    CLAUDE.md, GEMINI.md, AGENTS.md,
 │                               .github/copilot-instructions.md
-├── <span class="file">rules/</span>              <span class="arrow">──→</span>    .cursor/rules/, .windsurf/rules/, .gemini/rules/
-├── <span class="file">commands/</span>           <span class="arrow">──→</span>    .claude/commands/, .gemini/commands/
-├── <span class="file">skills/</span>             <span class="arrow">──→</span>    .claude/skills/, .agents/skills/
+├── <span class="file">rules/</span>              <span class="arrow">──→</span>    .gemini/rules/
+├── <span class="file">commands/</span>           <span class="arrow">──→</span>    .claude/commands/
+├── <span class="file">commands-gemini/</span>    <span class="arrow">──→</span>    .gemini/commands/ <span class="comment">(Gemini uses .toml)</span>
+├── <span class="file">skills/</span>             <span class="arrow">──→</span>    .claude/skills/, .gemini/skills/,
+│                               .agents/skills/, .github/skills/
 ├── <span class="file">workflows/</span>          <span class="arrow">──→</span>    .agents/workflows/
 ├── <span class="file">knowledge/</span>          <span class="arrow">──→</span>    .claude/knowledge/, .gemini/knowledge/, .github/knowledge/
 ├── <span class="file">settings/</span>
 │   ├── claude.json     <span class="arrow">──→</span>    .claude/settings.json
 │   └── gemini.json     <span class="arrow">──→</span>    .gemini/settings.json
 └── <span class="file">ignore/</span>
-    ├── .aiignore       <span class="arrow">──→</span>    .geminiignore
-    └── .codeiumignore  <span class="arrow">──→</span>    .codeiumignore</div>
+    └── .aiignore       <span class="arrow">──→</span>    .geminiignore</div>
     </div>
   </section>
 
@@ -592,7 +809,7 @@
   <section id="tools">
     <div class="container">
       <div class="section-label">Supported tools</div>
-      <h2>7 tools. One config.</h2>
+      <h2>4 tools. One config.</h2>
       <p>Every major AI coding tool is supported out of the box.</p>
       <div class="cards">
         <div class="card">
@@ -601,251 +818,58 @@
         </div>
         <div class="card">
           <h3>Gemini CLI <span class="badge">.gemini/</span></h3>
-          <p>AI.md → GEMINI.md, settings, commands, ignore, <strong>knowledge</strong></p>
-        </div>
-        <div class="card">
-          <h3>Cursor <span class="badge">.cursor/</span></h3>
-          <p>Rules directory symlink</p>
+          <p>AI.md → GEMINI.md, settings, commands (.toml), skills, ignore, <strong>knowledge</strong></p>
         </div>
         <div class="card">
           <h3>GitHub Copilot <span class="badge">.github/</span></h3>
-          <p>AI.md → copilot-instructions.md, prompts, instructions, <strong>knowledge</strong></p>
-        </div>
-        <div class="card">
-          <h3>Windsurf <span class="badge">.windsurf/</span></h3>
-          <p>AI.md → AGENTS.md, rules, ignore</p>
-        </div>
-        <div class="card">
-          <h3>Codex CLI <span class="badge">.codex/</span></h3>
-          <p>AI.md → AGENTS.md, global skills</p>
+          <p>AI.md → copilot-instructions.md, prompts, instructions, skills, <strong>knowledge</strong></p>
         </div>
         <div class="card">
           <h3>Antigravity <span class="badge">.gemini/</span></h3>
-          <p>AI.md → GEMINI.md, settings, rules, workflows, skills, <strong>knowledge</strong></p>
+          <p>AI.md → GEMINI.md + AGENTS.md, settings, rules, workflows, skills, <strong>knowledge</strong></p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Symlink Mapping -->
-  <section id="mapping">
-    <div class="container">
-      <div class="section-label">Symlink mapping</div>
-      <h2>Full mapping reference</h2>
-      <p>What you edit in <code>.ai/</code> and where each tool reads it from.</p>
-      <div style="overflow-x:auto; border: 1px solid var(--border); border-radius: var(--radius);">
-        <table class="mapping-table">
-          <thead>
-            <tr>
-              <th>You edit</th>
-              <th>Tool sees</th>
-              <th>Used by</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td><code class="src">AI.md</code></td><td><code class="tgt">CLAUDE.md</code></td><td>Claude Code</td></tr>
-            <tr><td><code class="src">AI.md</code></td><td><code class="tgt">GEMINI.md</code></td><td>Gemini CLI / Antigravity</td></tr>
-            <tr><td><code class="src">AI.md</code></td><td><code class="tgt">AGENTS.md</code></td><td>Windsurf, Codex</td></tr>
-            <tr><td><code class="src">AI.md</code></td><td><code class="tgt">.github/copilot-instructions.md</code></td><td>GitHub Copilot</td></tr>
-            <tr><td><code class="src">rules/</code></td><td><code class="tgt">.cursor/rules/</code></td><td>Cursor</td></tr>
-            <tr><td><code class="src">rules/</code></td><td><code class="tgt">.windsurf/rules/</code></td><td>Windsurf</td></tr>
-            <tr><td><code class="src">rules/</code></td><td><code class="tgt">.gemini/rules/</code></td><td>Antigravity</td></tr>
-            <tr><td><code class="src">commands/</code></td><td><code class="tgt">.claude/commands/</code></td><td>Claude Code</td></tr>
-            <tr><td><code class="src">commands/</code></td><td><code class="tgt">.gemini/commands/</code></td><td>Gemini CLI</td></tr>
-            <tr><td><code class="src">skills/</code></td><td><code class="tgt">.claude/skills/</code></td><td>Claude Code</td></tr>
-            <tr><td><code class="src">skills/</code></td><td><code class="tgt">.agents/skills/</code></td><td>Antigravity</td></tr>
-            <tr><td><code class="src">workflows/</code></td><td><code class="tgt">.agents/workflows/</code></td><td>Antigravity</td></tr>
-            <tr><td><code class="src">settings/claude.json</code></td><td><code class="tgt">.claude/settings.json</code></td><td>Claude Code</td></tr>
-            <tr><td><code class="src">settings/gemini.json</code></td><td><code class="tgt">.gemini/settings.json</code></td><td>Gemini / Antigravity</td></tr>
-            <tr><td><code class="src">ignore/.aiignore</code></td><td><code class="tgt">.geminiignore</code></td><td>Gemini CLI</td></tr>
-            <tr><td><code class="src">ignore/.codeiumignore</code></td><td><code class="tgt">.codeiumignore</code></td><td>Windsurf</td></tr>
-            <tr><td><code class="src">knowledge/</code></td><td><code class="tgt">.claude/knowledge/</code></td><td>Claude Code</td></tr>
-            <tr><td><code class="src">knowledge/</code></td><td><code class="tgt">.gemini/knowledge/</code></td><td>Gemini / Antigravity</td></tr>
-            <tr><td><code class="src">knowledge/</code></td><td><code class="tgt">.github/knowledge/</code></td><td>GitHub Copilot</td></tr>
-          </tbody>
         </table>
       </div>
     </div>
   </section>
 
-  <!-- Commands -->
-  <section id="commands">
-    <div class="container">
-      <div class="section-label">CLI Commands</div>
-      <h2>10 commands to manage everything</h2>
-      <p>Every command supports <code>--help</code> for detailed usage.</p>
-      <div style="overflow-x:auto; border: 1px solid var(--border); border-radius: var(--radius);">
-        <table class="cmd-table">
-          <thead>
-            <tr><th>Command</th><th>Description</th><th>Flags</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>dotai init</code></td>
-              <td>Scaffold <code>.ai/</code> directory, or restore from existing <code>.dotai.json</code></td>
-              <td>
-                <code>-y, --yes</code> skip prompts, use defaults<br>
-                <code>--tools &lt;list&gt;</code> comma-separated tool IDs<br>
-                <code>--dir &lt;path&gt;</code> custom AI directory (default: <code>.ai</code>)<br>
-                <code>--no-link</code> skip symlinking after init<br>
-                <code>--dry-run</code> preview without writing
-              </td>
-            </tr>
-            <tr>
-              <td><code>dotai link [tools...]</code></td>
-              <td>Create symlinks for specified or all configured tools</td>
-              <td>
-                <code>--force</code> overwrite existing files<br>
-                <code>--backup</code> back up files before replacing<br>
-                <code>--no-backup</code> skip backup even with --force<br>
-                <code>--dry-run</code> preview without writing
-              </td>
-            </tr>
-            <tr>
-              <td><code>dotai unlink [tools...]</code></td>
-              <td>Remove symlinks, optionally restore originals</td>
-              <td>
-                <code>--restore</code> restore backed-up files<br>
-                <code>--no-restore</code> don't restore backups<br>
-                <code>--dry-run</code> preview without writing
-              </td>
-            </tr>
-            <tr>
-              <td><code>dotai status</code></td>
-              <td>Show the current state of every symlink</td>
-              <td>
-                <code>--json</code> output as JSON<br>
-                <code>--tool &lt;id&gt;</code> filter by tool
-              </td>
-            </tr>
-            <tr>
-              <td><code>dotai add &lt;tool&gt;</code></td>
-              <td>Add a new tool to an existing project</td>
-              <td>
-                <code>--link</code> auto-create symlinks after adding<br>
-                <code>--dry-run</code> preview without writing
-              </td>
-            </tr>
-            <tr>
-              <td><code>dotai remove &lt;tool&gt;</code></td>
-              <td>Remove a tool and clean up its symlinks</td>
-              <td>
-                <code>--keep-files</code> keep symlinked files<br>
-                <code>--purge</code> remove tool-specific templates
-              </td>
-            </tr>
-            <tr>
-              <td><code>dotai list</code></td>
-              <td>List all supported tools and their link status</td>
-              <td>
-                <code>--all</code> show all tools (incl. unconfigured)<br>
-                <code>--json</code> output as JSON
-              </td>
-            </tr>
-            <tr>
-              <td><code>dotai sync</code></td>
-              <td>Re-evaluate and repair all symlinks</td>
-              <td>
-                <code>--tools &lt;list&gt;</code> comma-separated tools to sync<br>
-                <code>--dry-run</code> preview without writing
-              </td>
-            </tr>
-            <tr>
-              <td><code>dotai doctor</code></td>
-              <td>Run diagnostics and auto-fix issues</td>
-              <td>
-                <code>--fix</code> auto-fix all found issues<br>
-                <code>--tool &lt;id&gt;</code> check specific tool only<br>
-                <code>--json</code> output as JSON
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- Knowledge -->
+  <!-- Knowledge Feature Highlight -->
   <section id="knowledge">
     <div class="container">
-      <div class="section-label">v2.0.0</div>
-      <h2>Persistent Agent Memory</h2>
-      <p>
-        AI agents reset their memory every conversation. dotai v2 builds a persistent knowledge layer at <code>.ai/knowledge/</code> that gives every agent instant codebase context — and agents <strong>auto-persist</strong> new discoveries as they work.
+      <div class="section-label">Persistent Memory</div>
+      <h2>Your AI agents never forget</h2>
+      <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto 8px; font-size: 1.05rem;">
+        AI agents reset their memory every conversation. dotai v2 changes that — with a persistent knowledge layer that grows smarter with every commit and every session.
       </p>
-      <div class="diagram"><span class="file">.ai/knowledge/</span>      <span class="comment">← Committed to git</span>
-├── <span class="file">INDEX.md</span>         <span class="comment">← High-level codebase map + symbol table</span>
-├── <span class="file">patterns.md</span>      <span class="comment">← Recurring code patterns</span>
-├── <span class="file">gotchas.md</span>       <span class="comment">← Edge cases &amp; do-NOT rules</span>
-├── <span class="file">changelog.md</span>     <span class="comment">← Recent code changes (auto-updated)</span>
-├── <span class="file">modules/</span>         <span class="comment">← Per-module deep summaries</span>
-└── <span class="file">decisions/</span>       <span class="comment">← Architecture decision records</span></div>
-      <div class="code-block"><span class="comment"># Set up persistent knowledge</span>
-<span class="prompt">$</span> dotai knowledge scan          <span class="comment"># scan codebase → .ai/knowledge/</span>
-<span class="prompt">$</span> dotai knowledge hook install  <span class="comment"># auto-update on every git commit</span>
-
-<span class="comment"># MCP server runs independently (no dotai init required)</span>
-<span class="prompt">$</span> dotai knowledge serve --stdio <span class="comment"># auto-creates knowledge dir if missing</span>
-<span class="prompt">$</span> dotai knowledge serve --stdio --project /path/to/project <span class="comment"># for IDE tools</span></div>
-
-      <h3 style="margin-top: 32px">Step 2: Populate with Your AI Agent</h3>
-      <p>
-        <code>dotai knowledge scan</code> creates the knowledge <strong>skeleton</strong> &mdash; module files, an index, and basic exports.
-        The deep insights (architecture, patterns, gotchas) come from your <strong>AI agent</strong> using dotai MCP tools.
-      </p>
-      <p>
-        Open your AI agent (Gemini, Claude, Antigravity, Cursor) and paste this prompt:
-      </p>
-      <div class="code-block"><span class="comment"># Example prompt for your AI agent:</span>
-
-Use knowledge_explore to analyze the entire codebase directory by directory.
-For each module, use knowledge_append to persist patterns, gotchas, and insights.
-Then use knowledge_populate_ai_md to fill in the AI.md with project overview,
-architecture, tech stack, key commands, constraints, and common pitfalls.</div>
-
-      <p style="margin-top: 16px; opacity: 0.8; font-size: 0.9em;">
-        <strong>Why two steps?</strong> The CLI scanner is fast but shallow &mdash; it extracts exports and file structure.
-        AI agents understand <em>semantics</em> &mdash; they identify patterns, gotchas, and architectural decisions that no static scanner can.
+      <p style="color: var(--text-secondary); max-width: 560px; margin: 0 auto;">
+        <strong style="color: var(--text)">The result?</strong> Your AI starts every session already knowing your architecture, patterns, gotchas, and constraints.
       </p>
 
-      <h3 style="margin-top: 32px">How Auto-Persist Works</h3>
-      <p>
-        The <code>AI.md</code> template includes a <strong>mandatory auto-persist rule</strong>. When an agent reads or modifies code and discovers something non-obvious, it immediately calls the <code>knowledge_append</code> MCP tool — no user prompting needed. Knowledge accumulates across sessions automatically.
-      </p>
-      <div style="overflow-x:auto; border: 1px solid var(--border); border-radius: var(--radius); margin-top: 24px;">
-        <table class="cmd-table">
-          <thead>
-            <tr><th>Command</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>dotai knowledge scan</code></td><td>Scan codebase and generate/update knowledge files</td></tr>
-            <tr><td><code>dotai knowledge update</code></td><td>Incremental update from last git commit</td></tr>
-            <tr><td><code>dotai knowledge watch</code></td><td>Watch mode — update on file save</td></tr>
-            <tr><td><code>dotai knowledge serve</code></td><td>MCP server with 7 tools (runs independently, no init needed)</td></tr>
-            <tr><td><code>dotai knowledge hook install</code></td><td>Install git hook (auto-amends knowledge into each commit)</td></tr>
-            <tr><td><code>dotai knowledge status</code></td><td>Show knowledge base health + staleness</td></tr>
-            <tr><td><code>dotai knowledge append</code></td><td>Add a finding to gotchas, patterns, or a module</td></tr>
-            <tr><td><code>dotai knowledge clean</code></td><td>Delete knowledge for fresh re-scan</td></tr>
-          </tbody>
-        </table>
+      <div class="knowledge-highlights">
+        <div class="kh-card">
+          <div class="kh-icon">🧠</div>
+          <h3>Auto-Growing Memory</h3>
+          <p>Agents automatically persist discoveries as they work. Patterns, gotchas, and architecture decisions accumulate across sessions — no manual effort.</p>
+        </div>
+        <div class="kh-card">
+          <div class="kh-icon">⚡</div>
+          <h3>Zero-Delay Context</h3>
+          <p>Every agent session starts with full codebase context from line one. No warm-up, no re-explaining. Just instant, deep understanding.</p>
+        </div>
+        <div class="kh-card">
+          <div class="kh-icon">🔄</div>
+          <h3>Git-Native Updates</h3>
+          <p>A post-commit hook auto-amends knowledge into every commit. Your knowledge base stays current without extra steps or extra commits.</p>
+        </div>
       </div>
-      <h3 style="margin-top: 32px">MCP Tools</h3>
-      <div style="overflow-x:auto; border: 1px solid var(--border); border-radius: var(--radius); margin-top: 12px;">
-        <table class="cmd-table">
-          <thead>
-            <tr><th>Tool</th><th>Type</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>knowledge_query</code></td><td>📖 Read</td><td>Search the knowledge base by keyword</td></tr>
-            <tr><td><code>knowledge_get_module</code></td><td>📖 Read</td><td>Get full summary of a specific module</td></tr>
-            <tr><td><code>knowledge_list_modules</code></td><td>📖 Read</td><td>List all indexed modules</td></tr>
-            <tr><td><code>knowledge_recent_changes</code></td><td>📖 Read</td><td>Get recent codebase changes</td></tr>
-            <tr><td><code>knowledge_append</code></td><td>✏️ Write</td><td>Persist a finding to the knowledge base</td></tr>
-            <tr><td><code>knowledge_explore</code></td><td>📖 Read</td><td>Read source files for deep AI analysis</td></tr>
-            <tr><td><code>knowledge_populate_ai_md</code></td><td>✏️ Write</td><td>Update AI.md with project-specific content</td></tr>
-          </tbody>
-        </table>
-      </div>
+
+      <p style="text-align: center; margin-top: 32px; font-size: 0.95rem;">
+        <a href="docs.html#kb-overview" style="color: var(--accent); text-decoration: none; font-weight: 600;">Learn how the Knowledge Base works →</a>
+      </p>
     </div>
   </section>
 
@@ -1002,6 +1026,79 @@ gotchas, and architecture."</div>
     </div>
   </section>
 
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="container">
+      <div class="section-label">FAQ</div>
+      <h2>Frequently Asked Questions</h2>
+      <p>Common questions about using dotai in your projects.</p>
+
+      <div class="faq-list">
+
+        <details class="faq-item">
+          <summary>My project already has CLAUDE.md, GEMINI.md, commands, and skills. How do I use dotai with it?</summary>
+          <div class="faq-answer">
+            <p>dotai is designed for exactly this scenario. Run <code>dotai init</code> — it automatically detects your existing context files and <strong>merges their content</strong> into <code>.ai/AI.md</code>. Nothing is lost.</p>
+            <p>For existing commands and skills, copy them into <code>.ai/</code>, then run <code>dotai link --force --backup</code>. Your originals are saved as <code>.dotai.bak</code> files.</p>
+            <div class="faq-note">
+              <strong>💡 Safe to revert:</strong> Run <code>dotai unlink</code> to remove all symlinks and restore originals.
+            </div>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Does dotai modify my existing config files?</summary>
+          <div class="faq-answer">
+            <p>No. By default, dotai <strong>skips</strong> any existing real file at a symlink target. It only replaces files when you explicitly use <code>--force</code>, which also creates a backup automatically.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>What happens when a teammate clones the repo?</summary>
+          <div class="faq-answer">
+            <p>They run <code>dotai init</code>. It reads <code>.dotai.json</code> and auto-sets up everything — no prompts needed. Similar to how <code>npm install</code> reads <code>package.json</code>.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Can I use a different directory name instead of .ai/?</summary>
+          <div class="faq-answer">
+            <p>Yes. Use <code>dotai init --dir .custom-name</code> to specify a custom directory. The name is stored in <code>.dotai.json</code> and used for all subsequent commands.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Does dotai work on Windows?</summary>
+          <div class="faq-answer">
+            <p>Yes. On Windows 10+, dotai uses NTFS junctions for directories and standard symlinks for files. No administrator privileges are required.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>How do I stop using dotai without breaking anything?</summary>
+          <div class="faq-answer">
+            <p>Run <code>dotai unlink</code>. It removes all symlinks and restores the original files from <code>.dotai.bak</code> backups. Your project goes back to its pre-dotai state.</p>
+          </div>
+        </details>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Docs CTA -->
+  <section>
+    <div class="container">
+      <div class="docs-cta">
+        <h2>📖 Ready to dive deeper?</h2>
+        <p>Explore the full documentation — installation, configuration, knowledge base, CLI reference, and guides.</p>
+        <a href="docs.html" class="btn-docs">
+          Read the Documentation
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
 
   <!-- Footer -->
 
@@ -1017,6 +1114,23 @@ gotchas, and architecture."</div>
   </footer>
 
   <script>
+    // ── Theme Toggle ──
+    (function() {
+      const toggle = document.getElementById('themeToggle');
+      const saved = localStorage.getItem('dotai-theme');
+      if (saved) {
+        document.documentElement.setAttribute('data-theme', saved);
+      } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+      toggle.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('dotai-theme', next);
+      });
+    })();
+
     function copyInstall(btn) {
       navigator.clipboard.writeText('npm install -g @nbslabs/dotai').then(() => {
         btn.classList.add('copied');

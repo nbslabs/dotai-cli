@@ -22,7 +22,7 @@ export class KnowledgeWatcher {
     const ignored = [
       '**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**',
       '**/out/**', '**/target/**', '**/.ai/**', '**/.claude/**',
-      '**/.gemini/**', '**/.cursor/**', '**/.windsurf/**',
+      '**/.gemini/**',
       ...this.config.excludePatterns.map((p) => `**/${p}`),
     ]
 

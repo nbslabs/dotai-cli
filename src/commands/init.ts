@@ -29,7 +29,7 @@ export const initCommand: CommandModule<{}, InitArgs> = {
       })
       .option('tools', {
         type: 'string',
-        description: 'Comma-separated tools: claude,gemini,cursor,copilot,windsurf,codex',
+        description: 'Comma-separated tools: claude,gemini,copilot,antigravity',
       })
       .option('dir', {
         type: 'string',
@@ -166,7 +166,7 @@ export const initCommand: CommandModule<{}, InitArgs> = {
       if (explicitTools) {
         selectedTools = explicitTools.split(',').map((t) => t.trim())
       } else if (useDefaults) {
-        selectedTools = getAllToolIds().filter((id) => id !== 'codex')
+        selectedTools = getAllToolIds()
       } else {
         selectedTools = await promptCheckbox(
           'Select AI tools to configure:',

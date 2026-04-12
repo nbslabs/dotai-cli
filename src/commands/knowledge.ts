@@ -361,7 +361,7 @@ export const knowledgeCommand: CommandModule<{}, KnowledgeArgs> = {
             .option('project', { type: 'string', description: 'Explicit project root path (for IDE-spawned MCP where cwd may differ)' }),
         async (argv) => {
           try {
-            // IDE tools (Antigravity, Cursor) may spawn MCP with a different cwd.
+            // IDE tools (Antigravity) may spawn MCP with a different cwd.
             // --project lets the config explicitly pass the project root.
             const projectRoot = argv.project || (await findProjectRoot()) || process.cwd()
 
