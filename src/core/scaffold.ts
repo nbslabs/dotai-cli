@@ -317,16 +317,7 @@ Guide through the deployment process:
 `,
 
 
-    'example-skill.md': `# Example Skill
 
-This is a template skill. Skills are reusable instruction sets that AI agents can reference.
-
-## When to Use
-- Describe when this skill should be applied
-
-## Instructions
-- Step-by-step instructions for the AI agent
-`,
 
     'example-prompt.md': `---
 description: Example prompt for GitHub Copilot
@@ -683,7 +674,7 @@ export async function scaffoldAiDir(
     { relPath: 'commands/learn.md', templateName: 'learn.md', content: '' },
     { relPath: 'commands-gemini/review.toml', templateName: 'review.toml', content: '', toolSpecific: ['gemini'] },
     { relPath: 'commands-gemini/deploy.toml', templateName: 'deploy.toml', content: '', toolSpecific: ['gemini'] },
-    { relPath: 'skills/example-skill/SKILL.md', templateName: 'example-skill.md', content: '' },
+
     { relPath: 'prompts/example.prompt.md', templateName: 'example-prompt.md', content: '', toolSpecific: ['copilot'] },
     { relPath: 'instructions/backend.instructions.md', templateName: 'backend-instructions.md', content: '', toolSpecific: ['copilot'] },
     { relPath: 'settings/claude.json', templateName: 'settings-claude.json', content: '', toolSpecific: ['claude'] },
@@ -702,7 +693,7 @@ export async function scaffoldAiDir(
   await ensureDir(join(aiPath, 'rules'))
   await ensureDir(join(aiPath, 'commands'))
   await ensureDir(join(aiPath, 'commands-gemini'))
-  await ensureDir(join(aiPath, 'skills', 'example-skill'))
+  await ensureDir(join(aiPath, 'skills'))
   await ensureDir(join(aiPath, 'prompts'))
   await ensureDir(join(aiPath, 'instructions'))
   await ensureDir(join(aiPath, 'settings'))

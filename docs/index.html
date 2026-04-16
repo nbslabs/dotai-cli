@@ -35,7 +35,7 @@
         "price": "0",
         "priceCurrency": "USD"
       },
-      "softwareVersion": "2.1.0",
+      "softwareVersion": "3.0.0",
       "license": "https://opensource.org/licenses/MIT"
     }
   </script>
@@ -711,10 +711,11 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" role="img" aria-labelledby="logo-title"><title id="logo-title">dotai logo</title><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         <span>dot</span>ai
       </a>
-      <span class="nav-version">v2.1.0</span>
+      <span class="nav-version">v3.0.0</span>
       <div class="nav-links">
         <a href="#how-it-works" class="hide-mobile">How it works</a>
         <a href="#tools" class="hide-mobile">Tools</a>
+        <a href="#sdd" class="hide-mobile">SDD</a>
         <a href="#workflow" class="hide-mobile">Workflow</a>
         <a href="#faq" class="hide-mobile">FAQ</a>
         <a href="docs.html" class="hide-mobile">Docs</a>
@@ -730,7 +731,7 @@
   <!-- Hero -->
   <div class="hero">
     <div class="container">
-      <div class="hero-badge">✦ v2.1.0 — Open Source CLI Tool</div>
+      <div class="hero-badge">✦ v3.0.0 — Spec-Driven Development</div>
       <h1>
         One <code>.ai/</code> folder.<br>
         <span class="gradient">All your AI tools.</span><br>
@@ -738,7 +739,7 @@
       </h1>
       <p>
         Stop maintaining separate config files for every AI coding tool.
-        dotai manages Claude, Gemini, Copilot &amp; Antigravity from a single directory using symlinks — with a persistent codebase knowledge layer that gives every AI agent instant context.
+        dotai manages Claude, Gemini, Copilot &amp; Antigravity from a single directory — plus an 8-phase Spec-Driven Development workflow that keeps AI code traceable to human-reviewed specs.
       </p>
       <div class="hero-actions">
         <a href="https://github.com/nbslabs/dotai-cli" class="btn btn-hero">
@@ -869,6 +870,118 @@
 
       <p style="text-align: center; margin-top: 32px; font-size: 0.95rem;">
         <a href="docs.html#kb-overview" style="color: var(--accent); text-decoration: none; font-weight: 600;">Learn how the Knowledge Base works →</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- SDD Toolkit -->
+  <section id="sdd">
+    <div class="container">
+      <div class="section-label">Spec-Driven Development</div>
+      <h2>Every line of code traces back to a spec</h2>
+      <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto 8px; font-size: 1.05rem;">
+        The SDD Toolkit introduces an 8-phase workflow where AI agents implement features from human-reviewed specifications. No more uncontrolled AI drift.
+      </p>
+      <p style="color: var(--text-secondary); max-width: 560px; margin: 0 auto;">
+        <strong style="color: var(--text)">The result?</strong> Human-quality control over AI-speed development. Review at checkpoints, not after the damage is done.
+      </p>
+
+      <!-- Phase diagram -->
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px 24px; margin-top: 40px;">
+        <svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; font-family: Inter, sans-serif;">
+          <defs>
+            <marker id="sdd-a" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+              <polygon points="0 0, 7 2.5, 0 5" fill="#818cf8"/>
+            </marker>
+          </defs>
+
+          <!-- Phase 1: Initiate -->
+          <rect x="0" y="30" width="80" height="56" rx="8" fill="#0d3320" stroke="#34d399" stroke-width="1.5"/>
+          <text x="40" y="53" text-anchor="middle" fill="#34d399" font-size="10" font-weight="700">1. INITIATE</text>
+          <text x="40" y="72" text-anchor="middle" fill="#94a3b8" font-size="8">👤 You write idea</text>
+          <line x1="80" y1="58" x2="96" y2="58" stroke="#818cf8" stroke-width="1.2" marker-end="url(#sdd-a)"/>
+
+          <!-- Phase 2: Specify -->
+          <rect x="100" y="30" width="80" height="56" rx="8" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.5"/>
+          <text x="140" y="53" text-anchor="middle" fill="#a5b4fc" font-size="10" font-weight="700">2. SPECIFY</text>
+          <text x="140" y="72" text-anchor="middle" fill="#94a3b8" font-size="8">🤖 Requirements</text>
+          <line x1="180" y1="58" x2="196" y2="58" stroke="#818cf8" stroke-width="1.2" marker-end="url(#sdd-a)"/>
+          <text x="140" y="100" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="600">👤 Review</text>
+
+          <!-- Phase 3: Decompose -->
+          <rect x="200" y="30" width="80" height="56" rx="8" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.5"/>
+          <text x="240" y="53" text-anchor="middle" fill="#a5b4fc" font-size="10" font-weight="700">3. DECOMPOSE</text>
+          <text x="240" y="72" text-anchor="middle" fill="#94a3b8" font-size="8">🤖 Task files</text>
+          <line x1="280" y1="58" x2="296" y2="58" stroke="#818cf8" stroke-width="1.2" marker-end="url(#sdd-a)"/>
+          <text x="240" y="100" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="600">👤 Review</text>
+
+          <!-- Phase 4: Plan -->
+          <rect x="300" y="30" width="80" height="56" rx="8" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.5"/>
+          <text x="340" y="53" text-anchor="middle" fill="#a5b4fc" font-size="10" font-weight="700">4. PLAN</text>
+          <text x="340" y="72" text-anchor="middle" fill="#94a3b8" font-size="8">🤖 Plans + eval</text>
+          <line x1="380" y1="58" x2="396" y2="58" stroke="#818cf8" stroke-width="1.2" marker-end="url(#sdd-a)"/>
+          <text x="340" y="100" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="600">👤 Review</text>
+
+          <!-- Phase 5: Implement -->
+          <rect x="400" y="30" width="80" height="56" rx="8" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.5"/>
+          <text x="440" y="53" text-anchor="middle" fill="#a5b4fc" font-size="10" font-weight="700">5. IMPLEMENT</text>
+          <text x="440" y="72" text-anchor="middle" fill="#94a3b8" font-size="8">🤖 Code it</text>
+          <line x1="480" y1="58" x2="496" y2="58" stroke="#818cf8" stroke-width="1.2" marker-end="url(#sdd-a)"/>
+
+          <!-- Phase 6: Evaluate -->
+          <rect x="500" y="30" width="80" height="56" rx="8" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.5"/>
+          <text x="540" y="53" text-anchor="middle" fill="#a5b4fc" font-size="10" font-weight="700">6. EVALUATE</text>
+          <text x="540" y="72" text-anchor="middle" fill="#94a3b8" font-size="8">🤖 Pass/Fail</text>
+          <line x1="580" y1="58" x2="596" y2="58" stroke="#818cf8" stroke-width="1.2" marker-end="url(#sdd-a)"/>
+
+          <!-- Phase 7: Review -->
+          <rect x="600" y="30" width="80" height="56" rx="8" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.5"/>
+          <text x="640" y="53" text-anchor="middle" fill="#a5b4fc" font-size="10" font-weight="700">7. REVIEW</text>
+          <text x="640" y="72" text-anchor="middle" fill="#94a3b8" font-size="8">🤖🔍 Code review</text>
+          <line x1="680" y1="58" x2="696" y2="58" stroke="#818cf8" stroke-width="1.2" marker-end="url(#sdd-a)"/>
+          <text x="640" y="100" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="600">👤 Review</text>
+
+          <!-- Phase 8: Sync -->
+          <rect x="700" y="30" width="60" height="56" rx="8" fill="#0d3320" stroke="#34d399" stroke-width="1.5"/>
+          <text x="730" y="53" text-anchor="middle" fill="#34d399" font-size="10" font-weight="700">8. SYNC</text>
+          <text x="730" y="72" text-anchor="middle" fill="#94a3b8" font-size="8">🤖 Knowledge</text>
+
+          <!-- Retry loop from Evaluate back to Implement -->
+          <path d="M540,86 L540,140 L440,140 L440,90" fill="none" stroke="#f87171" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#sdd-a)"/>
+          <text x="490" y="155" text-anchor="middle" fill="#f87171" font-size="8">↺ retry if fail</text>
+
+          <!-- Legend -->
+          <rect x="0" y="190" width="10" height="10" rx="2" fill="#0d3320" stroke="#34d399" stroke-width="1"/>
+          <text x="16" y="199" fill="#94a3b8" font-size="9">You</text>
+          <rect x="60" y="190" width="10" height="10" rx="2" fill="#1e1b4b" stroke="#818cf8" stroke-width="1"/>
+          <text x="76" y="199" fill="#94a3b8" font-size="9">AI Agent</text>
+          <rect x="150" y="190" width="10" height="10" rx="2" fill="none" stroke="#fbbf24" stroke-width="1"/>
+          <text x="166" y="199" fill="#94a3b8" font-size="9">Human Review Checkpoint</text>
+          <line x1="330" y1="195" x2="360" y2="195" stroke="#f87171" stroke-width="1" stroke-dasharray="4,3"/>
+          <text x="366" y="199" fill="#94a3b8" font-size="9">Retry on fail</text>
+        </svg>
+      </div>
+
+      <div class="knowledge-highlights" style="margin-top: 40px;">
+        <div class="kh-card">
+          <div class="kh-icon">🎯</div>
+          <h3>Spec-First</h3>
+          <p>Every line of code traces back to a human-reviewed specification. No hallucinated features, no unauthorized changes.</p>
+        </div>
+        <div class="kh-card">
+          <div class="kh-icon">🔄</div>
+          <h3>Built-in Retry</h3>
+          <p>If an evaluation fails, the agent automatically retries implementation using the diagnosis. No manual intervention needed.</p>
+        </div>
+        <div class="kh-card">
+          <div class="kh-icon">🛠️</div>
+          <h3>Cross-Tool</h3>
+          <p>28 command files generated in all 4 formats — Claude commands, Gemini commands, Copilot prompts, and Antigravity workflows.</p>
+        </div>
+      </div>
+
+      <p style="text-align: center; margin-top: 32px; font-size: 0.95rem;">
+        <a href="docs.html#sdd-overview" style="color: var(--accent); text-decoration: none; font-weight: 600;">Read the full SDD documentation →</a>
       </p>
     </div>
   </section>

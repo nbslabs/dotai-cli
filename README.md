@@ -16,16 +16,28 @@ AI coding tools each expect their own config directory — `.claude/`, `.gemini/
 
 Edit one file. Every tool stays in sync.
 
-## What's New in v2.1.0 — Focused Tool Support
+## What's New in v3.0.0 — Spec-Driven Development
 
-dotai now targets the 4 most impactful AI coding tools:
+dotai is now a complete ecosystem for AI-driven development. The new **SDD Toolkit** introduces a structured, 8-phase workflow where AI agents implement features from human-reviewed specifications — every piece of generated code traces back to an approved spec.
 
+```
+Idea → Requirements → Tasks → Plans → Implement → Evaluate → Review → Context-sync
+  👤       🤖           🤖       🤖       🤖          🤖         🤖🔍       🤖
+```
+
+**Human review checkpoints** at requirements, tasks, plans, and final review ensure the AI never drifts from what you actually want.
+
+```bash
+dotai sdd init                    # scaffold SDD skills + commands
+dotai sdd new my-feature           # create feature from template
+# Then use /sdd-specify, /sdd-decompose, /sdd-plan, etc.
+```
+
+### Also supports
 - **Gemini CLI** — Google's CLI-based AI assistant
 - **Antigravity** — Google's IDE-integrated AI agent
 - **Claude Code** — Anthropic's terminal-native coding assistant
 - **GitHub Copilot** — GitHub's AI pair programmer
-
-Cursor, Windsurf, and Codex support has been removed to maintain a focused, high-quality experience.
 
 ## Why dotai?
 
@@ -93,6 +105,10 @@ dotai init
 | `dotai list` | List all supported tools and their link status |
 | `dotai sync` | Re-evaluate and repair all symlinks |
 | `dotai doctor` | Run diagnostics and auto-fix issues |
+| `dotai sdd init` | Scaffold SDD toolkit (skills, commands, templates) |
+| `dotai sdd new <name>` | Create a new feature directory from template |
+| `dotai sdd list` | List all features and their current phase |
+| `dotai sdd status [name]` | Show detailed phase progress for a feature |
 
 ## Supported Tools
 
@@ -254,6 +270,85 @@ Code normally → git commit → hook auto-updates knowledge + amends silently
 
 > The git hook amends knowledge changes into each commit automatically.
 > No extra commits, no dirty diffs.
+
+## SDD Toolkit
+
+`dotai sdd` brings Spec-Driven Development (SDD) to your project — a structured workflow where every piece of AI-generated code traces back to a human-reviewed specification.
+
+### The 8-Phase Workflow
+
+```
+Phase 1: Initiate     → Human writes idea.md
+Phase 2: Specify      → Agent generates requirements.md       ← Human review
+Phase 3: Decompose    → Agent breaks into tasks/*.task.md     ← Human review
+Phase 4: Plan         → Agent generates plans + evaluation    ← Human review
+Phase 5: Implement    → Agent implements following the plan
+Phase 6: Evaluate     → Agent verifies against acceptance criteria
+Phase 7: Review       → Agent produces holistic code review   ← Human review
+Phase 8: Context-sync → Agent updates .ai/knowledge/
+```
+
+### Quick Start
+
+```bash
+# 1. Initialize SDD toolkit
+dotai sdd init
+
+# 2. Create a new feature
+dotai sdd new user-authentication
+
+# 3. Write your idea
+# Edit .ai/sdd/user-authentication/idea.md
+
+# 4. Run phases using your AI tool's native commands:
+#    Claude: /sdd-specify user-authentication
+#    Gemini: /sdd-specify user-authentication
+#    Copilot: Use prompt sdd-specify
+#    Antigravity: Use workflow sdd-specify
+```
+
+### SDD Commands
+
+| Command | Description |
+|---|---|
+| `dotai sdd init` | Scaffold skills, templates, and 28 cross-tool commands |
+| `dotai sdd init --force` | Re-write skills and commands (preserves feature dirs) |
+| `dotai sdd new <name>` | Create a new feature directory from template |
+| `dotai sdd list` | List all features with their current phase |
+| `dotai sdd status [name]` | Show phase-by-phase progress for a feature |
+
+### Cross-Tool Phase Commands
+
+SDD generates native commands for all 4 supported tools:
+
+| Phase | Claude / Gemini | Copilot | Antigravity |
+|---|---|---|---|
+| Specify | `/sdd-specify` | Prompt `sdd-specify` | Workflow `sdd-specify` |
+| Decompose | `/sdd-decompose` | Prompt `sdd-decompose` | Workflow `sdd-decompose` |
+| Plan | `/sdd-plan` | Prompt `sdd-plan` | Workflow `sdd-plan` |
+| Implement | `/sdd-implement` | Prompt `sdd-implement` | Workflow `sdd-implement` |
+| Evaluate | `/sdd-evaluate` | Prompt `sdd-evaluate` | Workflow `sdd-evaluate` |
+| Review | `/sdd-review` | Prompt `sdd-review` | Workflow `sdd-review` |
+| Sync | `/sdd-sync` | Prompt `sdd-sync` | Workflow `sdd-sync` |
+
+### Feature Directory Structure
+
+```
+.ai/sdd/my-feature/
+├── idea.md                        ← Phase 1: you write this
+├── requirements.md                ← Phase 2: agent generates
+├── tasks/
+│   ├── 01_user_auth.task.md       ← Phase 3: agent generates
+│   └── 02_api_routes.task.md
+├── plans/
+│   ├── 01_user_auth.plan.md       ← Phase 4: agent generates
+│   └── 02_api_routes.plan.md
+├── evaluation/
+│   ├── 01_user_auth.evaluation.md ← Phase 4: acceptance criteria
+│   ├── 01_user_auth.result.md     ← Phase 6: pass/fail verdict
+│   └── ...
+└── code-review.md                 ← Phase 7: holistic review
+```
 
 ## Usage
 
