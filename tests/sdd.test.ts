@@ -240,5 +240,56 @@ describe('sdd', () => {
       expect(info.phase).toBe(7)
       expect(info.hasCodeReview).toBe(true)
     })
+
+    it('detects Phase 5 (in-progress) when only some tasks have results', async () => {
+      const featurePath = join(tmpDir, 'test-feature')
+      await mkdir(join(featurePath, 'tasks'), { recursive: true })
+      await mkdir(join(featurePath, 'plans'), { recursive: true })
+      await mkdir(join(featurePath, 'evaluation'), { recursive: true })
+      await writeFile(join(featurePath, 'idea.md'), '# My idea')
+      await writeFile(join(featurePath, 'requirements.md'), '# Requirements\n\n## Functional Requirements\n1. Do X')
+
+      // 3 tasks, 3 plans, 3 evaluation criteria
+      for (let i = 1; i <= 3; i++) {
+        await writeFile(join(featurePath, 'tasks', `0${i}_task.task.md`), `# Task ${i}`)
+        await writeFile(join(featurePath, 'plans', `0${i}_task.plan.md`), `# Plan ${i}`)
+        await writeFile(join(featurePath, 'evaluation', `0${i}_task.evaluation.md`), `# Eval ${i}`)
+      }
+
+      // Only 1 out of 3 has a result
+      await writeFile(join(featurePath, 'evaluation', '01_task.result.md'), '# Evaluation Result\n\n## Overall Verdict: PASS')
+
+      const info = await detectFeaturePhase(featurePath)
+      expect(info.phase).toBe(5) // Phase 5 (in-progress), NOT 6
+      expect(info.phaseName).toBe('Implement')
+      expect(info.taskCount).toBe(3)
+      expect(info.resultCount).toBe(1)
+      expect(info.passCount).toBe(1)
+      expect(info.allPassed).toBe(false)
+    })
+
+    it('detects Phase 6 only when ALL tasks have passing results', async () => {
+      const featurePath = join(tmpDir, 'test-feature')
+      await mkdir(join(featurePath, 'tasks'), { recursive: true })
+      await mkdir(join(featurePath, 'plans'), { recursive: true })
+      await mkdir(join(featurePath, 'evaluation'), { recursive: true })
+      await writeFile(join(featurePath, 'idea.md'), '# My idea')
+      await writeFile(join(featurePath, 'requirements.md'), '# Requirements\n\n## Functional Requirements\n1. Do X')
+
+      // 2 tasks, all with plans, evaluations, and PASS results
+      for (let i = 1; i <= 2; i++) {
+        await writeFile(join(featurePath, 'tasks', `0${i}_task.task.md`), `# Task ${i}`)
+        await writeFile(join(featurePath, 'plans', `0${i}_task.plan.md`), `# Plan ${i}`)
+        await writeFile(join(featurePath, 'evaluation', `0${i}_task.evaluation.md`), `# Eval ${i}`)
+        await writeFile(join(featurePath, 'evaluation', `0${i}_task.result.md`), `# Result\n\n## Overall Verdict: PASS`)
+      }
+
+      const info = await detectFeaturePhase(featurePath)
+      expect(info.phase).toBe(6)
+      expect(info.phaseName).toBe('Evaluate')
+      expect(info.allPassed).toBe(true)
+      expect(info.passCount).toBe(2)
+      expect(info.resultCount).toBe(2)
+    })
   })
 })

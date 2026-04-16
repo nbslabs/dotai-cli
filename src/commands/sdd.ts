@@ -242,7 +242,9 @@ export const sddCommand: CommandModule<{}, SddArgs> = {
               if (info.taskCount > 0) stats.push(`${info.taskCount} tasks`)
               if (info.planCount > 0) stats.push(`${info.planCount} plans`)
               if (info.resultCount > 0) {
-                const passLabel = info.allPassed ? pc.green('all passed') : pc.yellow(`${info.resultCount} evaluated`)
+                const passLabel = info.allPassed
+                  ? pc.green('all passed')
+                  : pc.yellow(`${info.resultCount}/${info.taskCount} evaluated, ${info.passCount} passed`)
                 stats.push(passLabel)
               }
               if (info.hasCodeReview) stats.push(pc.magenta('reviewed'))
@@ -333,25 +335,52 @@ export const sddCommand: CommandModule<{}, SddArgs> = {
 
             const info = await detectFeaturePhase(featurePath)
 
+            // Build dynamic descriptions for Phase 5 and 6
+            const implDesc = info.resultCount > 0
+              ? `${info.resultCount}/${info.taskCount} tasks implemented`
+              : 'code written'
+            const evalDesc = info.resultCount > 0
+              ? `${info.passCount}/${info.taskCount} tasks passed`
+              : 'tasks evaluated'
+
             // Phase checklist
             const phases = [
               { num: 1, name: 'Initiate', desc: 'idea.md written' },
               { num: 2, name: 'Specify', desc: 'requirements.md generated' },
               { num: 3, name: 'Decompose', desc: 'tasks/ populated' },
               { num: 4, name: 'Plan', desc: 'plans/ + evaluation/ generated' },
-              { num: 5, name: 'Implement', desc: 'code written' },
-              { num: 6, name: 'Evaluate', desc: 'all tasks evaluated' },
+              { num: 5, name: 'Implement', desc: implDesc },
+              { num: 6, name: 'Evaluate', desc: evalDesc },
               { num: 7, name: 'Review', desc: 'code-review.md created' },
               { num: 8, name: 'Context-sync', desc: 'knowledge updated' },
             ]
 
             for (const p of phases) {
               const done = info.phase >= p.num
-              const current = info.phase === p.num
-              const icon = done ? pc.green('✓') : (current ? pc.yellow('→') : pc.gray('○'))
-              const label = current ? pc.bold(pc.white(`Phase ${p.num}: ${p.name}`)) : (done ? `Phase ${p.num}: ${p.name}` : pc.gray(`Phase ${p.num}: ${p.name}`))
+              // Phase 5 is only truly "done" when all tasks have results
+              const phase5Done = p.num === 5 && info.resultCount >= info.taskCount && info.taskCount > 0
+              // Phase 6 is only truly "done" when all tasks passed
+              const phase6Done = p.num === 6 && info.allPassed
+              const isComplete = p.num <= 4 ? done : (p.num === 5 ? phase5Done : (p.num === 6 ? phase6Done : done))
+              const inProgress = !isComplete && info.phase >= p.num
+
+              let icon: string
+              let label: string
+              if (isComplete) {
+                icon = pc.green('✓')
+                label = `Phase ${p.num}: ${p.name}`
+              } else if (inProgress) {
+                icon = pc.yellow('◐')
+                label = pc.bold(pc.yellow(`Phase ${p.num}: ${p.name}`))
+              } else if (info.phase + 1 === p.num) {
+                icon = pc.gray('→')
+                label = pc.gray(`Phase ${p.num}: ${p.name}`)
+              } else {
+                icon = pc.gray('○')
+                label = pc.gray(`Phase ${p.num}: ${p.name}`)
+              }
               const desc = pc.gray(` — ${p.desc}`)
-              logger.plain(`  ${icon} ${label}${done || current ? desc : ''}`)
+              logger.plain(`  ${icon} ${label}${isComplete || inProgress ? desc : ''}`)
             }
 
             logger.newline()
@@ -359,10 +388,11 @@ export const sddCommand: CommandModule<{}, SddArgs> = {
             // Stats
             if (info.taskCount > 0) logger.info(`Tasks: ${info.taskCount}`)
             if (info.planCount > 0) logger.info(`Plans: ${info.planCount}`)
-            if (info.evaluationCount > 0) logger.info(`Evaluations: ${info.evaluationCount}`)
+            if (info.evaluationCount > 0) logger.info(`Evaluation criteria: ${info.evaluationCount}`)
             if (info.resultCount > 0) {
-              const passStatus = info.allPassed ? pc.green('all passed') : pc.yellow(`${info.resultCount}/${info.taskCount} evaluated`)
-              logger.info(`Results: ${passStatus}`)
+              logger.info(`Evaluated: ${pc.cyan(`${info.resultCount}/${info.taskCount}`)} tasks`)
+              const passColor = info.passCount === info.resultCount ? pc.green : pc.yellow
+              logger.info(`Passed: ${passColor(`${info.passCount}/${info.resultCount}`)} evaluated`)
             }
             if (info.hasCodeReview) logger.info(`Code Review: ${pc.green('complete')}`)
 

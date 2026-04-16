@@ -571,8 +571,9 @@ export interface FeaturePhaseInfo {
   phaseName: string
   taskCount: number
   planCount: number
-  evaluationCount: number
-  resultCount: number
+  evaluationCount: number  // .evaluation.md files (criteria)
+  resultCount: number       // .result.md files (evaluated)
+  passCount: number         // .result.md files with PASS verdict
   allPassed: boolean
   hasCodeReview: boolean
 }
@@ -591,6 +592,7 @@ export async function detectFeaturePhase(featurePath: string): Promise<FeaturePh
     planCount: 0,
     evaluationCount: 0,
     resultCount: 0,
+    passCount: 0,
     allPassed: false,
     hasCodeReview: false,
   }
@@ -637,6 +639,19 @@ export async function detectFeaturePhase(featurePath: string): Promise<FeaturePh
     info.evaluationCount = evalFiles.length
     const resultFiles = (await readdir(evalDir)).filter(f => f.endsWith('.result.md'))
     info.resultCount = resultFiles.length
+
+    // Count PASS verdicts by reading each result file
+    let passCount = 0
+    for (const rf of resultFiles) {
+      const resultContent = await readTextFile(join(evalDir, rf))
+      // Look for PASS verdict (case-insensitive, common patterns)
+      if (/overall\s+verdict[:\s]*pass/i.test(resultContent)
+        || /verdict[:\s]*\*\*?pass\*\*?/i.test(resultContent)
+        || /^#+.*\bpass\b/im.test(resultContent)) {
+        passCount++
+      }
+    }
+    info.passCount = passCount
   }
 
   if (info.planCount > 0 && info.evaluationCount > 0) {
@@ -644,12 +659,27 @@ export async function detectFeaturePhase(featurePath: string): Promise<FeaturePh
     info.phaseName = 'Plan'
   }
 
-  // Phase 5-6: .result.md files exist
-  if (info.resultCount > 0) {
+  // Phase 5: Implementation is in progress when at least one .result.md exists
+  // (a result file means the task was implemented and then evaluated).
+  // Phase 5 is "complete" only when ALL tasks have result files.
+  if (info.resultCount > 0 && info.taskCount > 0) {
+    if (info.resultCount >= info.taskCount) {
+      // All tasks have been implemented and evaluated — Phase 5 is complete
+      info.phase = 5
+      info.phaseName = 'Implement'
+    } else {
+      // Partial: some tasks implemented and evaluated, but not all
+      info.phase = 5
+      info.phaseName = 'Implement'
+    }
+  }
+
+  // Phase 6: All tasks have results AND all passed
+  if (info.resultCount > 0 && info.taskCount > 0
+    && info.resultCount >= info.taskCount && info.passCount >= info.taskCount) {
+    info.allPassed = true
     info.phase = 6
     info.phaseName = 'Evaluate'
-    // Check if all tasks have passing results
-    info.allPassed = info.resultCount >= info.taskCount
   }
 
   // Phase 7: code-review.md exists
