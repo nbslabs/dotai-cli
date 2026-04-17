@@ -2,10 +2,11 @@ import type { CommandModule } from 'yargs'
 import { join } from 'path'
 import pc from 'picocolors'
 import { logger } from '../utils/logger'
-import { readConfig } from '../core/config'
+import { readConfig, getSddConfig } from '../core/config'
 import { getToolById } from '../core/registry'
 import { verifySymlink } from '../core/symlink'
 import { pathExists } from '../utils/fs'
+import { listFeatures } from '../core/sdd-scaffold'
 
 interface StatusArgs {
   json?: boolean
@@ -215,6 +216,22 @@ export const statusCommand: CommandModule<{}, StatusArgs> = {
       if (brokenCount > 0) {
         logger.newline()
         logger.dim('Run `dotai doctor` to auto-fix broken links.')
+      }
+
+      // SDD Toolkit status
+      logger.newline()
+      const sddConfig = getSddConfig(config)
+      const sddPath = join(projectRoot, config.aiDir, 'sdd')
+
+      if (sddConfig.enabled && (await pathExists(sddPath))) {
+        const features = await listFeatures(sddPath)
+        logger.plain(`${pc.bold('SDD Toolkit'.padEnd(18))} ${pc.green('✓ initialized')}`)
+        logger.dim(`  ${features.length} feature(s)`)
+      } else if (await pathExists(sddPath)) {
+        logger.plain(`${pc.bold('SDD Toolkit'.padEnd(18))} ${pc.yellow('~ directory exists (not in config)')}`)
+      } else {
+        logger.plain(`${pc.bold('SDD Toolkit'.padEnd(18))} ${pc.gray('— not initialized')}`)
+        logger.dim('  Run `dotai sdd init` to set up Spec-Driven Development')
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err)

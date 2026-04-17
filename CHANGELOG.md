@@ -2,6 +2,56 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.0] - 2026-04-16
+
+### Added
+- **Spec-Driven Development (SDD) Toolkit** — A structured, 8-phase workflow where
+  AI agents implement features from human-reviewed specifications. Every piece of
+  generated code traces back to an approved spec.
+- **`dotai sdd init`** — Scaffolds the full SDD toolkit: 8 skill files, SDD README,
+  feature template, and 28 cross-tool command files. Supports `--force` to re-write
+  skills and commands, and `--dry-run` to preview changes.
+- **`dotai sdd new <feature-name>`** — Creates a new feature directory from the
+  `_template-feature` template with `idea.md`, `requirements.md`, and subdirectories
+  for `tasks/`, `plans/`, and `evaluation/`. Validates kebab-case naming.
+- **`dotai sdd list`** — Lists all SDD features with their current workflow phase,
+  task counts, and evaluation status.
+- **`dotai sdd status [feature-name]`** — Shows detailed phase-by-phase progress
+  checklist for a specific feature, or overall SDD toolkit health if no feature is
+  specified. Includes skill file health check.
+- **8 SDD Skill Files** — Reusable agent instruction sets for each workflow phase:
+  `requirement-generation-skill`, `task-decompose-skill`, `plan-generation-skill`,
+  `evaluation-generation-skill`, `plan-implementation-skill`, `evaluation-skill`,
+  `code-review-skill`, `knowledge-update-skill`. All include a feature name discovery
+  clause and the implementation skill includes a retry clause for failed evaluations.
+- **28 Cross-tool SDD Command Files** — Phase commands (`sdd-specify`, `sdd-decompose`,
+  `sdd-plan`, `sdd-implement`, `sdd-evaluate`, `sdd-review`, `sdd-sync`) generated in
+  4 formats:
+  - Claude Code commands (`.ai/commands/sdd-*.md`)
+  - Gemini CLI commands (`.ai/commands-gemini/sdd-*.toml`)
+  - GitHub Copilot prompts (`.ai/prompts/sdd-*.prompt.md`)
+  - Antigravity workflows (`.ai/workflows/sdd-*.md`)
+- **Evaluation result files** — `.result.md` files in `evaluation/` directory persist
+  pass/fail verdicts across sessions.
+- **Code review report** — `code-review.md` file in feature directory for holistic
+  review output.
+- **`SddConfig`** in `.dotai.json` — New optional `sdd?: { enabled, initializedAt }`
+  config block. Fully backward-compatible.
+- **SDD section in `dotai status`** — Shows SDD initialization state and feature count.
+- **SDD health checks in `dotai doctor`** — Verifies skill files, AI.md SDD block,
+  and config/directory consistency.
+- **`tests/sdd.test.ts`** — 21 test cases covering scaffold creation, idempotency,
+  force mode, feature creation, name validation, feature listing, and phase detection.
+
+### Changed
+- **`dotai init` no longer creates `example-skill/`** — The example skill template has
+  been removed from the scaffold. SDD skill files serve as real-world examples instead.
+- `DotAiConfig` interface extended with optional `sdd?: SddConfig` field.
+
+### Breaking Changes
+- **None.** All existing commands, config files, and symlinks continue to work without
+  modification. The `sdd` block in `.dotai.json` is optional and defaults to disabled.
+
 ## [2.1.0] - 2026-04-13
 
 ### Removed

@@ -50,7 +50,7 @@ interface TemplateFile {
   toolSpecific?: string[]  // only create if one of these tools is enabled
 }
 
-function getTemplateContent(templateName: string, vars: { projectName: string; projectDescription: string; projectRoot: string }): string {
+export function getTemplateContent(templateName: string, vars: { projectName: string; projectDescription: string; projectRoot: string }): string {
   const templates: Record<string, string> = {
     'AI.md': `# AI Instructions — ${vars.projectName}
 
@@ -317,16 +317,7 @@ Guide through the deployment process:
 `,
 
 
-    'example-skill.md': `# Example Skill
 
-This is a template skill. Skills are reusable instruction sets that AI agents can reference.
-
-## When to Use
-- Describe when this skill should be applied
-
-## Instructions
-- Step-by-step instructions for the AI agent
-`,
 
     'example-prompt.md': `---
 description: Example prompt for GitHub Copilot
@@ -640,6 +631,7 @@ JSON config files for specific tools (permissions, preferences).
 | \`dotai remove <tool>\`| Remove a tool and clean up                |
 | \`dotai sync\`         | Fix broken or missing symlinks            |
 | \`dotai doctor\`       | Diagnose and auto-fix all issues          |
+| \`dotai upgrade\`      | Update .ai/ templates to latest version   |
 | \`dotai list --all\`   | Show all supported tools                  |
 | \`dotai knowledge scan\`    | Scan codebase → generate .ai/knowledge/    |
 | \`dotai knowledge watch\`   | Auto-update knowledge on file changes       |
@@ -657,6 +649,42 @@ JSON config files for specific tools (permissions, preferences).
   }
 
   return templates[templateName] || ''
+}
+
+/**
+ * Return the full list of scaffold template file definitions.
+ * Used by the upgrade command to compare on-disk files against current templates.
+ */
+export function getScaffoldTemplateFiles(tools: string[]): TemplateFile[] {
+  const files: TemplateFile[] = [
+    { relPath: 'AI.md', templateName: 'AI.md', content: '' },
+    { relPath: 'DOTAI.md', templateName: 'DOTAI.md', content: '' },
+    { relPath: 'rules/general.md', templateName: 'general.md', content: '' },
+    { relPath: 'rules/security.md', templateName: 'security.md', content: '' },
+    { relPath: 'rules/testing.md', templateName: 'testing.md', content: '' },
+    { relPath: 'commands/review.md', templateName: 'review.md', content: '' },
+    { relPath: 'commands/deploy.md', templateName: 'deploy.md', content: '' },
+    { relPath: 'commands/learn.md', templateName: 'learn.md', content: '' },
+    { relPath: 'commands-gemini/review.toml', templateName: 'review.toml', content: '', toolSpecific: ['gemini'] },
+    { relPath: 'commands-gemini/deploy.toml', templateName: 'deploy.toml', content: '', toolSpecific: ['gemini'] },
+    { relPath: 'prompts/example.prompt.md', templateName: 'example-prompt.md', content: '', toolSpecific: ['copilot'] },
+    { relPath: 'instructions/backend.instructions.md', templateName: 'backend-instructions.md', content: '', toolSpecific: ['copilot'] },
+    { relPath: 'settings/claude.json', templateName: 'settings-claude.json', content: '', toolSpecific: ['claude'] },
+    { relPath: 'settings/gemini.json', templateName: 'settings-gemini.json', content: '', toolSpecific: ['gemini', 'antigravity'] },
+    { relPath: 'ignore/.aiignore', templateName: 'aiignore', content: '' },
+    { relPath: 'workflows/example.md', templateName: 'example-workflow.md', content: '', toolSpecific: ['antigravity'] },
+    { relPath: 'knowledge/INDEX.md', templateName: 'knowledge-index.md', content: '' },
+    { relPath: 'knowledge/patterns.md', templateName: 'knowledge-patterns.md', content: '' },
+    { relPath: 'knowledge/gotchas.md', templateName: 'knowledge-gotchas.md', content: '' },
+    { relPath: 'knowledge/changelog.md', templateName: 'knowledge-changelog.md', content: '' },
+  ]
+
+  return files.filter(f => {
+    if (f.toolSpecific && !f.toolSpecific.some(t => tools.includes(t))) {
+      return false
+    }
+    return true
+  })
 }
 
 /**
@@ -683,7 +711,7 @@ export async function scaffoldAiDir(
     { relPath: 'commands/learn.md', templateName: 'learn.md', content: '' },
     { relPath: 'commands-gemini/review.toml', templateName: 'review.toml', content: '', toolSpecific: ['gemini'] },
     { relPath: 'commands-gemini/deploy.toml', templateName: 'deploy.toml', content: '', toolSpecific: ['gemini'] },
-    { relPath: 'skills/example-skill/SKILL.md', templateName: 'example-skill.md', content: '' },
+
     { relPath: 'prompts/example.prompt.md', templateName: 'example-prompt.md', content: '', toolSpecific: ['copilot'] },
     { relPath: 'instructions/backend.instructions.md', templateName: 'backend-instructions.md', content: '', toolSpecific: ['copilot'] },
     { relPath: 'settings/claude.json', templateName: 'settings-claude.json', content: '', toolSpecific: ['claude'] },
@@ -702,7 +730,7 @@ export async function scaffoldAiDir(
   await ensureDir(join(aiPath, 'rules'))
   await ensureDir(join(aiPath, 'commands'))
   await ensureDir(join(aiPath, 'commands-gemini'))
-  await ensureDir(join(aiPath, 'skills', 'example-skill'))
+  await ensureDir(join(aiPath, 'skills'))
   await ensureDir(join(aiPath, 'prompts'))
   await ensureDir(join(aiPath, 'instructions'))
   await ensureDir(join(aiPath, 'settings'))

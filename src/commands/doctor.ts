@@ -2,12 +2,13 @@ import type { CommandModule } from 'yargs'
 import { join } from 'path'
 import pc from 'picocolors'
 import { logger } from '../utils/logger'
-import { readConfig, writeConfig } from '../core/config'
+import { readConfig, writeConfig, getSddConfig } from '../core/config'
 import { getToolById, getGitignoreEntries } from '../core/registry'
 import { verifySymlink, createSymlink, isSymlink } from '../core/symlink'
 import { scaffoldAiDir, updateGitignore } from '../core/scaffold'
-import { pathExists, dirExists } from '../utils/fs'
+import { pathExists, dirExists, readTextFile } from '../utils/fs'
 import { promptConfirm } from '../utils/prompt'
+import { SDD_SKILLS } from '../core/sdd-scaffold'
 
 interface DoctorArgs {
   fix?: boolean
@@ -264,6 +265,66 @@ export const doctorCommand: CommandModule<{}, DoctorArgs> = {
             await updateGitignore(projectRoot, missing)
             logger.success(`Updated .gitignore (+${missing.length} entries)`)
           }
+        }
+      }
+
+      // Check 10: SDD Toolkit health
+      const sddConfig = getSddConfig(config)
+      const sddPath = join(aiPath, 'sdd')
+      const sddDirExists = await pathExists(sddPath)
+
+      if (sddConfig.enabled || sddDirExists) {
+        // Check skill files
+        let missingSkills = 0
+        for (const skill of SDD_SKILLS) {
+          const skillPath = join(aiPath, 'skills', skill.dirName, 'SKILL.md')
+          if (!(await pathExists(skillPath))) {
+            missingSkills++
+            issues.push({
+              tool: 'sdd',
+              type: 'missing-skill',
+              severity: 'warning',
+              message: `SDD skill missing: skills/${skill.dirName}/SKILL.md`,
+              fix: 'Run `dotai sdd init --force` to restore',
+              fixable: false,
+            })
+          }
+        }
+
+        if (!autoFix) {
+          if (missingSkills === 0 && sddDirExists) {
+            logger.success('sdd'.padEnd(12) + ' All skill files present')
+          } else if (missingSkills > 0) {
+            logger.error('sdd'.padEnd(12) + ` ${missingSkills} skill file(s) missing`)
+          }
+        }
+
+        // Check AI.md has SDD block
+        const aiMdPath = join(aiPath, 'AI.md')
+        if (await pathExists(aiMdPath)) {
+          const aiMdContent = await readTextFile(aiMdPath)
+          if (!aiMdContent.includes('## SDD Toolkit')) {
+            issues.push({
+              tool: 'sdd',
+              type: 'ai-md-missing-sdd',
+              severity: 'warning',
+              message: 'AI.md is missing the SDD Toolkit instruction block',
+              fix: 'Run `dotai sdd init --force` to add it',
+              fixable: false,
+            })
+          }
+        }
+
+        // Check config vs directory consistency
+        if (sddConfig.enabled && !sddDirExists) {
+          issues.push({
+            tool: 'sdd',
+            type: 'sdd-config-dir-mismatch',
+            severity: 'warning',
+            message: 'SDD is enabled in config but .ai/sdd/ directory is missing',
+            fix: 'Run `dotai sdd init` to recreate',
+            fixable: false,
+          })
         }
       }
 

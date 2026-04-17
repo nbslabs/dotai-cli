@@ -3,6 +3,11 @@ import { readJsonFile, writeJsonFile, pathExists } from '../utils/fs'
 import { VERSION } from '../version'
 import type { KnowledgeConfig } from './knowledge/types'
 
+export interface SddConfig {
+  enabled: boolean
+  initializedAt?: string
+}
+
 export interface ToolLinkState {
   linked: boolean
   linkedAt?: string
@@ -10,11 +15,13 @@ export interface ToolLinkState {
 
 export interface DotAiConfig {
   version: string
+  scaffoldVersion?: string       // dotai version that last ran init/upgrade
   tools: string[]
   aiDir: string
   gitignore: boolean
   links: Record<string, ToolLinkState>
-  knowledge?: KnowledgeConfig    // NEW — optional for backward compat
+  knowledge?: KnowledgeConfig    // optional for backward compat
+  sdd?: SddConfig                // optional for backward compat
 }
 
 const CONFIG_FILE = '.dotai.json'
@@ -101,4 +108,8 @@ export function getKnowledgeConfig(config: DotAiConfig): KnowledgeConfig {
     excludePatterns: [],
     autoUpdateOnCommit: false,
   }
+}
+
+export function getSddConfig(config: DotAiConfig): SddConfig {
+  return config.sdd ?? { enabled: false }
 }
