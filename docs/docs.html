@@ -693,6 +693,7 @@
         <a class="nav-link" href="#cli-list">dotai list</a>
         <a class="nav-link" href="#cli-sync">dotai sync</a>
         <a class="nav-link" href="#cli-doctor">dotai doctor</a>
+        <a class="nav-link" href="#cli-upgrade">dotai upgrade</a>
         <a class="nav-link" href="#cli-knowledge">dotai knowledge</a>
         <a class="nav-link" href="#cli-sdd">dotai sdd</a>
       </div>
@@ -1560,6 +1561,49 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
         </ul>
       </section>
 
+      <section class="doc-section" id="cli-upgrade">
+        <h1>dotai upgrade</h1>
+        <p class="subtitle">Update <code>.ai/</code> scaffold files to the latest dotai templates.</p>
+        <pre><code><span class="prompt">$</span> dotai upgrade
+<span class="prompt">$</span> dotai upgrade --dry-run
+<span class="prompt">$</span> dotai upgrade --force</code></pre>
+        <div class="table-wrap">
+          <table class="doc-table">
+            <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>--dry-run</code></td><td>Preview changes without modifying any files</td></tr>
+              <tr><td><code>--force</code></td><td>Overwrite ALL files with latest templates (destructive)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>How It Works</h2>
+        <p>When you upgrade dotai, your existing <code>.ai/</code> files keep stale template content because <code>dotai init</code> never overwrites existing files. <code>dotai upgrade</code> detects what changed and helps you migrate.</p>
+
+        <h2>File Categories</h2>
+        <div class="table-wrap">
+          <table class="doc-table">
+            <thead><tr><th>Category</th><th>Action</th><th>Example</th></tr></thead>
+            <tbody>
+              <tr><td><strong>NEW</strong></td><td>Auto-created</td><td>Template added in newer version</td></tr>
+              <tr><td><strong>CURRENT</strong></td><td>Skipped</td><td>File matches latest template</td></tr>
+              <tr><td><strong>AUTO-UPDATE</strong></td><td>Auto-overwritten</td><td><code>DOTAI.md</code> (reference docs only)</td></tr>
+              <tr><td><strong>REVIEW</strong></td><td>Saved to <code>_upgrade/</code></td><td><code>AI.md</code> (user-customized)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Review Workflow</h2>
+        <p>For user-modified files, the latest template is saved to <code>.ai/_upgrade/</code> so you can diff and merge manually:</p>
+        <pre><code><span class="prompt">$</span> diff .ai/AI.md .ai/_upgrade/AI.md
+<span class="comment"># Merge any new sections you want, then delete _upgrade/</span>
+<span class="prompt">$</span> rm -rf .ai/_upgrade/</code></pre>
+
+        <div class="callout">
+          <strong>Note:</strong> <code>AI.md</code> is never auto-overwritten — it is your most customized file. If the template changed, it goes to <code>_upgrade/</code> for manual review only.
+        </div>
+      </section>
+
       <section class="doc-section" id="cli-knowledge">
         <h1>dotai knowledge</h1>
         <p class="subtitle">Manage persistent codebase knowledge base — 8 subcommands.</p>
@@ -2007,10 +2051,33 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
         <h1>Upgrading</h1>
         <p class="subtitle">Migration steps from previous versions.</p>
 
+        <h2>From any version to v3.0.0+</h2>
+        <p>v3.0.0 introduces <code>dotai upgrade</code> — a dedicated command that detects stale scaffold files and helps you migrate.</p>
+        <pre><code><span class="prompt">$</span> npm install -g @nbslabs/dotai   <span class="comment"># upgrade dotai globally</span>
+<span class="prompt">$</span> cd your-project
+<span class="prompt">$</span> dotai upgrade --dry-run          <span class="comment"># preview what would change</span>
+<span class="prompt">$</span> dotai upgrade                    <span class="comment"># apply safe updates</span></code></pre>
+
+        <p>This will:</p>
+        <ol>
+          <li>Create any <strong>new</strong> template files added in newer versions</li>
+          <li>Auto-update <code>DOTAI.md</code> (reference documentation — safe to overwrite)</li>
+          <li>Save latest templates to <code>.ai/_upgrade/</code> for user-modified files (e.g., <code>AI.md</code>)</li>
+          <li>Track <code>scaffoldVersion</code> in <code>.dotai.json</code> for future upgrades</li>
+        </ol>
+
+        <div class="callout">
+          <strong>Tip:</strong> After upgrading, review <code>.ai/_upgrade/</code> to see what's new in the templates. Merge any sections you want into your files, then delete the <code>_upgrade/</code> directory.
+        </div>
+
+        <h3>Optional: Enable SDD Toolkit</h3>
+        <pre><code><span class="prompt">$</span> dotai sdd init                  <span class="comment"># opt-in to Spec-Driven Development</span></code></pre>
+
         <h2>From v2.0.x to v2.1.0</h2>
         <pre><code><span class="prompt">$</span> npm install -g @nbslabs/dotai   <span class="comment"># upgrade</span>
 <span class="prompt">$</span> cd your-project
-<span class="prompt">$</span> dotai init                       <span class="comment"># re-scaffolds missing dirs + re-links</span></code></pre>
+<span class="prompt">$</span> dotai upgrade                    <span class="comment"># preferred (v3.0.0+)</span>
+<span class="comment"># or: dotai init                  # re-scaffolds missing dirs + re-links</span></code></pre>
 
         <p>This will:</p>
         <ol>
@@ -2024,7 +2091,7 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
 
         <pre><code><span class="prompt">$</span> npm install -g @nbslabs/dotai
 <span class="prompt">$</span> cd your-project
-<span class="prompt">$</span> dotai init            <span class="comment"># v2 templates for knowledge/, learn command, etc.</span>
+<span class="prompt">$</span> dotai upgrade            <span class="comment"># preferred (v3.0.0+)</span>
 <span class="prompt">$</span> dotai knowledge scan  <span class="comment"># optional: set up persistent knowledge</span></code></pre>
       </section>
 

@@ -631,6 +631,7 @@ JSON config files for specific tools (permissions, preferences).
 | \`dotai remove <tool>\`| Remove a tool and clean up                |
 | \`dotai sync\`         | Fix broken or missing symlinks            |
 | \`dotai doctor\`       | Diagnose and auto-fix all issues          |
+| \`dotai upgrade\`      | Update .ai/ templates to latest version   |
 | \`dotai list --all\`   | Show all supported tools                  |
 | \`dotai knowledge scan\`    | Scan codebase → generate .ai/knowledge/    |
 | \`dotai knowledge watch\`   | Auto-update knowledge on file changes       |

@@ -105,6 +105,7 @@ dotai init
 | `dotai list` | List all supported tools and their link status |
 | `dotai sync` | Re-evaluate and repair all symlinks |
 | `dotai doctor` | Run diagnostics and auto-fix issues |
+| `dotai upgrade` | Update `.ai/` scaffold files to latest templates |
 | `dotai sdd init` | Scaffold SDD toolkit (skills, commands, templates) |
 | `dotai sdd new <name>` | Create a new feature directory from template |
 | `dotai sdd list` | List all features and their current phase |
