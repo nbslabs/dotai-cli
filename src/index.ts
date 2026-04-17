@@ -12,6 +12,7 @@ import { syncCommand } from './commands/sync'
 import { doctorCommand } from './commands/doctor'
 import { knowledgeCommand } from './commands/knowledge'
 import { sddCommand } from './commands/sdd'
+import { upgradeCommand } from './commands/upgrade'
 import { VERSION } from './version'
 
 const cli = yargs(hideBin(process.argv))
@@ -32,6 +33,7 @@ const cli = yargs(hideBin(process.argv))
   .command(doctorCommand)
   .command(knowledgeCommand)
   .command(sddCommand)
+  .command(upgradeCommand)
   .demandCommand(1, 'Specify a command. Run `dotai --help` for usage.')
   .strict()
 

@@ -15,6 +15,7 @@ export interface ToolLinkState {
 
 export interface DotAiConfig {
   version: string
+  scaffoldVersion?: string       // dotai version that last ran init/upgrade
   tools: string[]
   aiDir: string
   gitignore: boolean

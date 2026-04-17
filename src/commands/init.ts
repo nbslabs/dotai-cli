@@ -211,6 +211,7 @@ export const initCommand: CommandModule<{}, InitArgs> = {
 
       // Create .dotai.json
       const config = createDefaultConfig(selectedTools, aiDir)
+      config.scaffoldVersion = VERSION
 
       if (!dryRun) {
         await writeConfig(projectRoot, config)
