@@ -332,7 +332,36 @@ SDD generates native commands for all 4 supported tools:
 | Review | `/sdd-review` | Prompt `sdd-review` | Workflow `sdd-review` |
 | Sync | `/sdd-sync` | Prompt `sdd-sync` | Workflow `sdd-sync` |
 
-### Feature Directory Structure
+### Running Phase Commands
+
+The argument to every phase command is the **feature name** — not an individual file:
+
+```bash
+# Claude / Gemini CLI:
+/sdd-implement user-authentication
+
+# If you omit the name, the agent lists features and asks:
+/sdd-implement
+```
+
+**How each phase processes work:**
+
+| Phase | Scope | Behavior |
+|-------|-------|----------|
+| Specify | Entire feature | Reads `idea.md`, produces one `requirements.md` |
+| Decompose | Entire feature | Reads `requirements.md`, produces **all** task files at once |
+| Plan | Entire feature | Generates plans **and** evaluation criteria for **all** tasks in one shot |
+| Implement | **One task** | Implements the lowest-indexed incomplete task, then **stops and waits** |
+| Evaluate | **One task** | Evaluates the most recently implemented task — PASS → next, FAIL → retry |
+| Review | Entire feature | Holistic review of the **complete** implementation |
+| Sync | Entire feature | Updates knowledge base with all decisions and patterns |
+
+> **Implement and Evaluate are sequential by design.** The agent works on one task at
+> a time so you can inspect progress between tasks. Run `/sdd-implement` again to
+> advance to the next task. If evaluation fails, the agent retries the same task
+> automatically before moving on.
+
+
 
 ```
 .ai/sdd/my-feature/

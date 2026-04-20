@@ -85,9 +85,10 @@ export const removeCommand: CommandModule<{}, RemoveArgs> = {
           const aiPath = join(projectRoot, config.aiDir)
           // Only delete tool-specific files, not shared ones
           const toolSpecificFiles: Record<string, string[]> = {
-            claude: ['CLAUDE.md', 'settings/claude.json'],
-            gemini: ['GEMINI.md', 'settings/gemini.json'],
+            claude: ['settings/claude.json'],
+            gemini: ['settings/gemini.json'],
             copilot: ['instructions', 'prompts'],
+            antigravity: ['workflows'],
           }
 
           const filesToDelete = toolSpecificFiles[toolId] || []

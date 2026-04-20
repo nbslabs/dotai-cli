@@ -8,7 +8,7 @@ import { verifySymlink, createSymlink, isSymlink } from '../core/symlink'
 import { scaffoldAiDir, updateGitignore } from '../core/scaffold'
 import { pathExists, dirExists, readTextFile } from '../utils/fs'
 import { promptConfirm } from '../utils/prompt'
-import { SDD_SKILLS } from '../core/sdd-scaffold'
+import { SDD_SKILLS, scaffoldSdd } from '../core/sdd-scaffold'
 
 interface DoctorArgs {
   fix?: boolean
@@ -245,8 +245,7 @@ export const doctorCommand: CommandModule<{}, DoctorArgs> = {
       // Check 9: Gitignore
       const gitignorePath = join(projectRoot, '.gitignore')
       if (await pathExists(gitignorePath)) {
-        const { readFile } = await import('fs/promises')
-        const content = await readFile(gitignorePath, 'utf-8')
+        const content = await readTextFile(gitignorePath)
         const lines = new Set(content.split('\n').map((l) => l.trim()))
         const expected = getGitignoreEntries(config.tools)
         const missing = expected.filter((e) => !lines.has(e))
@@ -285,13 +284,16 @@ export const doctorCommand: CommandModule<{}, DoctorArgs> = {
               type: 'missing-skill',
               severity: 'warning',
               message: `SDD skill missing: skills/${skill.dirName}/SKILL.md`,
-              fix: 'Run `dotai sdd init --force` to restore',
-              fixable: false,
+              fix: 'Restore via `dotai sdd init --force`',
+              fixable: true,
             })
           }
         }
 
-        if (!autoFix) {
+        if (autoFix && missingSkills > 0) {
+          await scaffoldSdd(projectRoot, config.aiDir, { force: true })
+          logger.success(`Restored ${missingSkills} missing SDD skill file(s)`)
+        } else if (!autoFix) {
           if (missingSkills === 0 && sddDirExists) {
             logger.success('sdd'.padEnd(12) + ' All skill files present')
           } else if (missingSkills > 0) {

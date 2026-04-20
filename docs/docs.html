@@ -53,6 +53,10 @@
       --red: #f87171;
     }
 
+    /* ── SDD diagram SVG theme-aware text ── */
+    .sdd-output-text { fill: var(--text); }
+    .sdd-col-header  { fill: var(--text-secondary); }
+
     html { scroll-behavior: smooth; scroll-padding-top: calc(var(--topbar-h) + 24px); }
 
     body {
@@ -611,7 +615,7 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
       <span>dot</span>ai
     </a>
-    <span class="topbar-version">v3.0.0</span>
+    <span class="topbar-version">v3.0.1</span>
     <div class="topbar-sep"></div>
     <span class="topbar-title">Documentation</span>
     <div class="topbar-spacer"></div>
@@ -748,8 +752,9 @@ GEMINI.md              <span class="comment"># Gemini CLI reads this</span>
 
         <p>One file to write. Four tools that read it. Zero drift.</p>
 
-        <h2>What's New in v2.1.0</h2>
-        <p>dotai now targets the 4 most impactful AI coding tools:</p>
+        <h2>What's New in v3.0.1</h2>
+        <p>dotai is now a complete ecosystem for AI-driven development. The <strong>SDD Toolkit</strong> introduces a structured, 8-phase workflow where AI agents implement features from human-reviewed specifications — every piece of generated code traces back to an approved spec.</p>
+        <h3>Supported Tools</h3>
         <ul>
           <li><strong>Gemini CLI</strong> — Google's CLI-based AI assistant</li>
           <li><strong>Antigravity</strong> — Google's IDE-integrated AI agent</li>
@@ -773,7 +778,7 @@ GEMINI.md              <span class="comment"># Gemini CLI reads this</span>
 
         <h2>Verify</h2>
         <pre><code><span class="prompt">$</span> dotai --version
-<span class="comment">2.1.0</span></code></pre>
+<span class="comment">3.0.1</span></code></pre>
 
         <div class="callout callout-tip">
           <strong>Tip:</strong> If you use <code>npx</code> instead of a global install, prefix all commands with <code>npx dotai</code>.
@@ -873,7 +878,7 @@ GEMINI.md              <span class="comment"># Gemini CLI reads this</span>
         <p>Created by <code>dotai init</code>. Tracks which tools are configured, link states, and knowledge settings.</p>
 
         <pre><code>{
-  "version": "2.1.0",
+  "version": "3.0.1",
   "tools": ["claude", "gemini", "copilot", "antigravity"],
   "aiDir": ".ai",
   "gitignore": true,
@@ -888,6 +893,10 @@ GEMINI.md              <span class="comment"># Gemini CLI reads this</span>
     "scanDepth": 2,
     "excludePatterns": [],
     "autoUpdateOnCommit": false
+  },
+  "sdd": {
+    "enabled": true,
+    "initializedAt": "2026-04-16T..."
   }
 }</code></pre>
 
@@ -901,6 +910,7 @@ GEMINI.md              <span class="comment"># Gemini CLI reads this</span>
               <tr><td><code>gitignore</code></td><td>boolean</td><td>Whether dotai manages <code>.gitignore</code></td></tr>
               <tr><td><code>links</code></td><td>object</td><td>Per-tool link state with <code>linked</code> flag and <code>linkedAt</code> timestamp</td></tr>
               <tr><td><code>knowledge</code></td><td>object?</td><td>Optional knowledge config (added in v2.0.0)</td></tr>
+              <tr><td><code>sdd</code></td><td>object?</td><td>Optional SDD toolkit config (added in v3.0.0)</td></tr>
             </tbody>
           </table>
         </div>
@@ -1245,7 +1255,7 @@ applyTo: "src/backend/**,server/**,api/**"
         <h1>Knowledge Base Overview</h1>
         <p class="subtitle">Persistent agent memory that survives across conversations.</p>
 
-        <p>AI agents reset their memory every conversation. dotai v2 builds a persistent knowledge layer at <code>.ai/knowledge/</code> that gives every agent instant codebase context — and agents <strong>auto-persist</strong> new discoveries as they work.</p>
+        <p>AI agents reset their memory every conversation. dotai builds a persistent knowledge layer at <code>.ai/knowledge/</code> that gives every agent instant codebase context — and agents <strong>auto-persist</strong> new discoveries as they work.</p>
 
         <div class="diagram"><span class="file-c">.ai/knowledge/</span>      <span class="comment">Committed to git</span>
 ├── <span class="file-c">INDEX.md</span>         <span class="comment">High-level codebase map + symbol table</span>
@@ -1705,17 +1715,17 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
             </defs>
 
             <!-- Column headers -->
-            <text x="100" y="18" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700" letter-spacing="1.5">PHASE</text>
-            <text x="320" y="18" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700" letter-spacing="1.5">COMMAND</text>
-            <text x="520" y="18" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700" letter-spacing="1.5">OUTPUT</text>
-            <text x="650" y="18" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700" letter-spacing="1.5">ACTOR</text>
-            <line x1="0" y1="26" x2="700" y2="26" stroke="#2d2d44" stroke-width="0.5"/>
+            <text x="100" y="18" text-anchor="middle" class="sdd-col-header" font-size="10" font-weight="700" letter-spacing="1.5">PHASE</text>
+            <text x="320" y="18" text-anchor="middle" class="sdd-col-header" font-size="10" font-weight="700" letter-spacing="1.5">COMMAND</text>
+            <text x="520" y="18" text-anchor="middle" class="sdd-col-header" font-size="10" font-weight="700" letter-spacing="1.5">OUTPUT</text>
+            <text x="650" y="18" text-anchor="middle" class="sdd-col-header" font-size="10" font-weight="700" letter-spacing="1.5">ACTOR</text>
+            <line x1="0" y1="26" x2="700" y2="26" stroke="var(--border)" stroke-width="0.5"/>
 
             <!-- Phase 1 -->
             <rect x="20" y="36" width="160" height="40" rx="6" fill="#0d3320" stroke="#34d399" stroke-width="1.2"/>
             <text x="100" y="60" text-anchor="middle" fill="#34d399" font-size="12" font-weight="600">1. Initiate</text>
             <text x="320" y="60" text-anchor="middle" fill="#94a3b8" font-size="11" font-style="italic">(manual)</text>
-            <text x="520" y="60" text-anchor="middle" fill="#e2e8f0" font-size="11">idea.md</text>
+            <text x="520" y="60" text-anchor="middle" class="sdd-output-text" font-size="11">idea.md</text>
             <text x="650" y="60" text-anchor="middle" fill="#34d399" font-size="11" font-weight="600">👤 Human</text>
             <line x1="100" y1="76" x2="100" y2="92" stroke="#818cf8" stroke-width="1" marker-end="url(#doc-a)"/>
 
@@ -1723,7 +1733,7 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
             <rect x="20" y="96" width="160" height="40" rx="6" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.2"/>
             <text x="100" y="120" text-anchor="middle" fill="#a5b4fc" font-size="12" font-weight="600">2. Specify</text>
             <text x="320" y="120" text-anchor="middle" fill="#a5b4fc" font-size="11">/sdd-specify</text>
-            <text x="520" y="120" text-anchor="middle" fill="#e2e8f0" font-size="11">requirements.md</text>
+            <text x="520" y="120" text-anchor="middle" class="sdd-output-text" font-size="11">requirements.md</text>
             <rect x="618" y="107" width="64" height="22" rx="4" fill="none" stroke="#fbbf24" stroke-width="1"/>
             <text x="650" y="122" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="600">👤 Review</text>
             <line x1="100" y1="136" x2="100" y2="152" stroke="#818cf8" stroke-width="1" marker-end="url(#doc-a)"/>
@@ -1732,7 +1742,7 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
             <rect x="20" y="156" width="160" height="40" rx="6" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.2"/>
             <text x="100" y="180" text-anchor="middle" fill="#a5b4fc" font-size="12" font-weight="600">3. Decompose</text>
             <text x="320" y="180" text-anchor="middle" fill="#a5b4fc" font-size="11">/sdd-decompose</text>
-            <text x="520" y="180" text-anchor="middle" fill="#e2e8f0" font-size="11">tasks/*.task.md</text>
+            <text x="520" y="180" text-anchor="middle" class="sdd-output-text" font-size="11">tasks/*.task.md</text>
             <rect x="618" y="167" width="64" height="22" rx="4" fill="none" stroke="#fbbf24" stroke-width="1"/>
             <text x="650" y="182" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="600">👤 Review</text>
             <line x1="100" y1="196" x2="100" y2="212" stroke="#818cf8" stroke-width="1" marker-end="url(#doc-a)"/>
@@ -1741,7 +1751,7 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
             <rect x="20" y="216" width="160" height="40" rx="6" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.2"/>
             <text x="100" y="240" text-anchor="middle" fill="#a5b4fc" font-size="12" font-weight="600">4. Plan</text>
             <text x="320" y="240" text-anchor="middle" fill="#a5b4fc" font-size="11">/sdd-plan</text>
-            <text x="520" y="240" text-anchor="middle" fill="#e2e8f0" font-size="11">plans + evaluations</text>
+            <text x="520" y="240" text-anchor="middle" class="sdd-output-text" font-size="11">plans + evaluations</text>
             <rect x="618" y="227" width="64" height="22" rx="4" fill="none" stroke="#fbbf24" stroke-width="1"/>
             <text x="650" y="242" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="600">👤 Review</text>
             <line x1="100" y1="256" x2="100" y2="272" stroke="#818cf8" stroke-width="1" marker-end="url(#doc-a)"/>
@@ -1750,7 +1760,7 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
             <rect x="20" y="276" width="160" height="40" rx="6" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.2"/>
             <text x="100" y="300" text-anchor="middle" fill="#a5b4fc" font-size="12" font-weight="600">5. Implement</text>
             <text x="320" y="300" text-anchor="middle" fill="#a5b4fc" font-size="11">/sdd-implement</text>
-            <text x="520" y="300" text-anchor="middle" fill="#e2e8f0" font-size="11">working code</text>
+            <text x="520" y="300" text-anchor="middle" class="sdd-output-text" font-size="11">working code</text>
             <text x="650" y="300" text-anchor="middle" fill="#a5b4fc" font-size="11">🤖 Agent</text>
             <line x1="100" y1="316" x2="100" y2="332" stroke="#818cf8" stroke-width="1" marker-end="url(#doc-a)"/>
 
@@ -1758,7 +1768,7 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
             <rect x="20" y="336" width="160" height="40" rx="6" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.2"/>
             <text x="100" y="360" text-anchor="middle" fill="#a5b4fc" font-size="12" font-weight="600">6. Evaluate</text>
             <text x="320" y="360" text-anchor="middle" fill="#a5b4fc" font-size="11">/sdd-evaluate</text>
-            <text x="520" y="360" text-anchor="middle" fill="#e2e8f0" font-size="11">*.result.md</text>
+            <text x="520" y="360" text-anchor="middle" class="sdd-output-text" font-size="11">*.result.md</text>
             <text x="650" y="360" text-anchor="middle" fill="#a5b4fc" font-size="11">🤖 Agent</text>
 
             <!-- Retry loop -->
@@ -1770,7 +1780,7 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
             <rect x="20" y="396" width="160" height="40" rx="6" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.2"/>
             <text x="100" y="420" text-anchor="middle" fill="#a5b4fc" font-size="12" font-weight="600">7. Review</text>
             <text x="320" y="420" text-anchor="middle" fill="#a5b4fc" font-size="11">/sdd-review</text>
-            <text x="520" y="420" text-anchor="middle" fill="#e2e8f0" font-size="11">code-review.md</text>
+            <text x="520" y="420" text-anchor="middle" class="sdd-output-text" font-size="11">code-review.md</text>
             <rect x="618" y="407" width="64" height="22" rx="4" fill="none" stroke="#fbbf24" stroke-width="1"/>
             <text x="650" y="422" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="600">👤 Review</text>
           </svg>
@@ -1896,7 +1906,69 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
           </table>
         </div>
 
-        <h2>File Locations</h2>
+        <h3 style="margin-top: 32px;">Running Phase Commands</h3>
+        <p style="color: var(--text-secondary);">
+          The argument to every phase command is the <strong>feature name</strong> — not an individual task or plan file:
+        </p>
+        <pre><code><span class="comment"># Claude / Gemini CLI:</span>
+/sdd-implement user-authentication
+
+<span class="comment"># If you omit the name, the agent lists features and asks:</span>
+/sdd-implement</code></pre>
+
+        <p style="color: var(--text-secondary); margin-top: 16px;"><strong style="color: var(--text);">How each phase processes work:</strong></p>
+        <div class="table-wrap">
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th>Phase</th>
+                <th>Scope</th>
+                <th>Behavior</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Specify</td>
+                <td>Entire feature</td>
+                <td>Reads <code>idea.md</code>, produces one <code>requirements.md</code></td>
+              </tr>
+              <tr>
+                <td>Decompose</td>
+                <td>Entire feature</td>
+                <td>Reads <code>requirements.md</code>, produces <strong>all</strong> task files at once</td>
+              </tr>
+              <tr>
+                <td>Plan</td>
+                <td>Entire feature</td>
+                <td>Generates plans <strong>and</strong> evaluation criteria for <strong>all</strong> tasks in one shot</td>
+              </tr>
+              <tr>
+                <td><strong>Implement</strong></td>
+                <td><strong>One task</strong></td>
+                <td>Implements the lowest-indexed incomplete task, then <strong>stops and waits</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Evaluate</strong></td>
+                <td><strong>One task</strong></td>
+                <td>Evaluates the most recently implemented task — PASS → next, FAIL → retry</td>
+              </tr>
+              <tr>
+                <td>Review</td>
+                <td>Entire feature</td>
+                <td>Holistic review of the <strong>complete</strong> implementation</td>
+              </tr>
+              <tr>
+                <td>Sync</td>
+                <td>Entire feature</td>
+                <td>Updates knowledge base with all decisions and patterns</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 12px;">
+          <strong>Implement and Evaluate are sequential by design.</strong> The agent works on one task at a time so you can inspect progress between tasks. Run the command again to advance to the next task. If evaluation fails, the agent retries the same task automatically before moving on.
+        </p>
+
         <pre><code><span class="file-c">.ai/</span>
 ├── <span class="file-c">commands/</span>          <span class="comment">← Claude Code (.md)</span>
 │   ├── sdd-specify.md
