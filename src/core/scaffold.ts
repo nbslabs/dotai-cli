@@ -1,5 +1,4 @@
 import { join } from 'path'
-import { readFile } from 'fs/promises'
 import { ensureDir, writeTextFile, pathExists, readTextFile } from '../utils/fs'
 import { logger } from '../utils/logger'
 
@@ -699,31 +698,8 @@ export async function scaffoldAiDir(
   const vars = { projectName, projectDescription, projectRoot }
   const createdFiles: string[] = []
 
-  // Define the file structure
-  const files: TemplateFile[] = [
-    { relPath: 'AI.md', templateName: 'AI.md', content: '' },
-    { relPath: 'DOTAI.md', templateName: 'DOTAI.md', content: '' },
-    { relPath: 'rules/general.md', templateName: 'general.md', content: '' },
-    { relPath: 'rules/security.md', templateName: 'security.md', content: '' },
-    { relPath: 'rules/testing.md', templateName: 'testing.md', content: '' },
-    { relPath: 'commands/review.md', templateName: 'review.md', content: '' },
-    { relPath: 'commands/deploy.md', templateName: 'deploy.md', content: '' },
-    { relPath: 'commands/learn.md', templateName: 'learn.md', content: '' },
-    { relPath: 'commands-gemini/review.toml', templateName: 'review.toml', content: '', toolSpecific: ['gemini'] },
-    { relPath: 'commands-gemini/deploy.toml', templateName: 'deploy.toml', content: '', toolSpecific: ['gemini'] },
-
-    { relPath: 'prompts/example.prompt.md', templateName: 'example-prompt.md', content: '', toolSpecific: ['copilot'] },
-    { relPath: 'instructions/backend.instructions.md', templateName: 'backend-instructions.md', content: '', toolSpecific: ['copilot'] },
-    { relPath: 'settings/claude.json', templateName: 'settings-claude.json', content: '', toolSpecific: ['claude'] },
-    { relPath: 'settings/gemini.json', templateName: 'settings-gemini.json', content: '', toolSpecific: ['gemini', 'antigravity'] },
-    { relPath: 'ignore/.aiignore', templateName: 'aiignore', content: '' },
-
-    { relPath: 'workflows/example.md', templateName: 'example-workflow.md', content: '', toolSpecific: ['antigravity'] },
-    { relPath: 'knowledge/INDEX.md', templateName: 'knowledge-index.md', content: '' },
-    { relPath: 'knowledge/patterns.md', templateName: 'knowledge-patterns.md', content: '' },
-    { relPath: 'knowledge/gotchas.md', templateName: 'knowledge-gotchas.md', content: '' },
-    { relPath: 'knowledge/changelog.md', templateName: 'knowledge-changelog.md', content: '' },
-  ]
+  // Use the shared template file definitions (single source of truth)
+  const files = getScaffoldTemplateFiles(tools)
 
   // Create directories
   await ensureDir(aiPath)
@@ -788,8 +764,7 @@ export async function updateGitignore(
   let existing = ''
 
   if (await pathExists(gitignorePath)) {
-    const { readFile } = await import('fs/promises')
-    existing = await readFile(gitignorePath, 'utf-8')
+    existing = await readTextFile(gitignorePath)
   }
 
   const existingLines = new Set(existing.split('\n').map((l) => l.trim()))

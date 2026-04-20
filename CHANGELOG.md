@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.1] - 2026-04-20
+
+### Fixed
+- **`dotai remove --purge`** — Added missing `antigravity` tool to the purge file map.
+  Removed stale symlink-target entries (`CLAUDE.md`, `GEMINI.md`) that reference
+  project-root files instead of `.ai/` source files.
+- **Symlink directory detection** — The heuristic that infers file-vs-directory from
+  the path now checks only the filename (last segment) instead of the full path, which
+  previously false-matched on `.ai/` parent directories containing a dot.
+- **`findProjectRoot`** — Replaced `join(dir, '..')` with `resolve(dir, '..')` for
+  reliable parent path comparison when walking up the directory tree.
+- **Scaffold template duplication** — `scaffoldAiDir()` now delegates to the shared
+  `getScaffoldTemplateFiles()` function instead of maintaining a duplicate file list.
+- **Redundant imports** — Removed unused `readFile` import from `scaffold.ts` and
+  replaced dynamic `readFile` imports in `doctor.ts` and `scaffold.ts` with the
+  already-imported `readTextFile` utility.
+- **Docs: light-mode diagram contrast** — Applied theme-aware CSS classes to SVG text
+  in both `docs/index.html` and `docs/docs.html` diagrams (SDD workflow + knowledge
+  loop). Text now uses `var(--text)` and `var(--text-secondary)` instead of hardcoded
+  light colors invisible in light mode.
+
+### Enhanced
+- **`dotai doctor --fix`** — Missing SDD skill files are now auto-fixable. Previously
+  reported as `fixable: false` requiring manual `dotai sdd init --force`; now doctor
+  calls `scaffoldSdd` directly when `--fix` is used.
+- **SDD file traceability** — All 8 SDD skill templates now include a "File
+  Traceability" clause instructing agents to prepend `<!-- feature: <name> -->` as the
+  first line of every generated `.md` file, extending traceability beyond the initial
+  `idea.md` and `requirements.md`.
+
 ## [3.0.0] - 2026-04-16
 
 ### Added

@@ -1,6 +1,6 @@
 {
   "name": "@nbslabs/dotai",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "One .ai/ folder to rule all AI coding tool configs",
   "bin": {
     "dotai": "./dist/index.js"

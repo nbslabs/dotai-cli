@@ -1,4 +1,4 @@
-import { join } from 'path'
+import { join, resolve } from 'path'
 import { readJsonFile, writeJsonFile, pathExists } from '../utils/fs'
 import { VERSION } from '../version'
 import type { KnowledgeConfig } from './knowledge/types'
@@ -90,7 +90,7 @@ export async function findProjectRoot(startDir?: string): Promise<string | null>
       return dir
     }
 
-    const parent = join(dir, '..')
+    const parent = resolve(dir, '..')
     if (parent === dir || dir === root) {
       break
     }

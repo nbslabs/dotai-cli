@@ -10,6 +10,11 @@ const FEATURE_DISCOVERY_CLAUSE = `
 If the feature name is not provided in the prompt, list all directories in \`.ai/sdd/\`
 (excluding \`_template-feature/\` and \`README.md\`) and ask the developer which feature
 to operate on. Do not guess.
+
+## File Traceability
+Every \`.md\` file you create inside a feature directory MUST begin with an HTML comment
+tag on the very first line: \`<!-- feature: <feature-name> -->\`. This tag is invisible
+in rendered markdown but enables automated traceability across all SDD phases.
 `
 
 function skillRequirementGeneration(): string {
@@ -834,14 +839,20 @@ export async function createFeature(sddPath: string, featureName: string, aiDir:
   await ensureDir(join(featurePath, 'plans'))
   await ensureDir(join(featurePath, 'evaluation'))
 
-  // Copy template files
-  const ideaContent = (await pathExists(join(templatePath, 'idea.md')))
+  // Feature-name comment prepended to every generated markdown file
+  const featureComment = `<!-- feature: ${featureName} -->`
+
+  // Copy template files and inject feature comment as the first line
+  const rawIdeaContent = (await pathExists(join(templatePath, 'idea.md')))
     ? await readTextFile(join(templatePath, 'idea.md'))
     : templateIdeaMd()
 
-  const reqContent = (await pathExists(join(templatePath, 'requirements.md')))
+  const rawReqContent = (await pathExists(join(templatePath, 'requirements.md')))
     ? await readTextFile(join(templatePath, 'requirements.md'))
     : templateRequirementsMd()
+
+  const ideaContent = `${featureComment}\n${rawIdeaContent}`
+  const reqContent = `${featureComment}\n${rawReqContent}`
 
   await writeTextFile(join(featurePath, 'idea.md'), ideaContent)
   createdFiles.push(`${aiDir}/sdd/${featureName}/idea.md`)

@@ -248,8 +248,9 @@ async function createSymlinkFs(source: string, target: string): Promise<void> {
     const stat = await lstat(source)
     isDir = stat.isDirectory()
   } catch {
-    // Source might not exist yet, try inferring from path
-    isDir = !source.includes('.')
+    // Source might not exist yet, infer from filename (last segment)
+    const basename = source.split('/').pop() || source
+    isDir = !basename.includes('.')
   }
 
   if (isWindows() && isDir) {
