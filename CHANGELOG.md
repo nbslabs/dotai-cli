@@ -2,6 +2,87 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.0] - 2026-04-30
+
+### Added
+- **`dotai mcp` command group** — Manage MCP server configurations across all
+  enabled tools from the CLI.
+  - `dotai mcp add <name> -c <cmd> [-a <args>] [-e <env>]` — Add an MCP server
+    to all enabled tool settings files (`.ai/settings/claude.json`,
+    `.ai/settings/gemini.json`). Supports `--tool` to target a single tool,
+    `--url` for HTTP-based servers, and `--env` for environment variables.
+  - `dotai mcp remove <name>` — Remove an MCP server from all settings files.
+  - `dotai mcp list [--json]` — List all configured MCP servers with their
+    command, args, and which settings files reference them.
+  - Correctly deduplicates Gemini/Antigravity which share `settings/gemini.json`.
+    Auto-creates settings files if missing.
+
+- **`dotai skill` command group** — Manage reusable skill packages in
+  `.ai/skills/`.
+  - `dotai skill add <name> [-d "description"]` — Create a skill directory with
+    a `SKILL.md` template. Validates kebab-case naming and auto-refreshes
+    symlinks for all enabled tools.
+  - `dotai skill remove <name> [-y]` — Delete a skill package with confirmation.
+  - `dotai skill list [--json]` — List all skills with descriptions parsed from
+    SKILL.md frontmatter, showing which tools they're linked to.
+
+- **`dotai rule` command group** — Manage coding rule files in `.ai/rules/`.
+  - `dotai rule add <name> [--always]` — Create a rule file with proper YAML
+    frontmatter (`description`, `alwaysApply`).
+  - `dotai rule remove <name> [-y]` — Delete a rule file with confirmation.
+  - `dotai rule list [--json]` — List all rules showing `[always]` vs
+    `[on-demand]` badges and descriptions.
+
+- **`dotai cmd` command group** — Manage custom slash commands across all
+  enabled tool formats simultaneously.
+  - `dotai cmd add <name>` — Creates command files for every enabled tool in
+    one shot: `commands/<name>.md` (Claude), `commands-gemini/<name>.toml`
+    (Gemini), `workflows/<name>.md` (Antigravity), `prompts/<name>.prompt.md`
+    (Copilot). Uses a data-driven `CMD_TARGETS` architecture so new tools only
+    need one entry.
+  - `dotai cmd remove <name> [-y]` — Removes the command from all formats
+    (including formats for tools that are no longer enabled).
+  - `dotai cmd list [--json]` — Lists all commands merged by base name across
+    all 4 format directories.
+
+- **`dotai config` command group** — View and modify `.dotai.json` settings
+  directly from the CLI.
+  - `dotai config get <key>` — Read any config key (supports nested objects,
+    outputs JSON for complex values).
+  - `dotai config set <key> <value>` — Set a config value (restricted to safe
+    keys: `aiDir`, `gitignore`). Auto-parses booleans and numbers.
+  - `dotai config show` — Dump the full `.dotai.json` configuration as
+    formatted JSON.
+
+### Changed
+- **`dotai cmd add` is now data-driven** — Previously only created `.md` (Claude)
+  and `.toml` (Gemini) files. Now uses a `CMD_TARGETS` array that maps all 4
+  tool command formats. Adding support for a new tool requires only one entry.
+- **`dotai sdd remove <name>` command** — Remove an SDD feature and all its
+  artifacts from `.ai/sdd/`. Shows feature phase, file count, and requires
+  confirmation before deletion. Supports `-y` for scripted usage.
+- **`dotai knowledge` simplified to AI-driven model** — Removed `scan`, `update`,
+  `watch`, `hook`, and `append` subcommands. Replaced with `knowledge init` which
+  scaffolds the knowledge directory, installs a `knowledge-scan-skill`, and creates
+  `/learn` slash commands for all enabled tools. Knowledge generation is now fully
+  delegated to AI agents via MCP tools.
+- **Built-in `/git-stage-commit` slash command** — `dotai init` now scaffolds a
+  `/git-stage-commit` command for all tools (Claude, Gemini, Antigravity, Copilot).
+  It stages all changes, generates a conventional commit message from the diff,
+  checks whether the knowledge base needs populating, and commits locally without
+  pushing.
+- **`dotai upgrade` now removes stale files** — The upgrade command detects files
+  from previous scaffold versions that are no longer part of the current template
+  set and removes them automatically. New files are created, reference docs are
+  auto-updated, and user-modified files are staged for manual review.
+- **Total CLI commands: 17 top-level** — up from 12 in v3.0.x, with 16 new
+  subcommands across the 5 new command groups plus SDD remove.
+
+### Breaking Changes
+- **`dotai knowledge scan/update/watch/hook/append` removed.** Use `dotai knowledge init`
+  to scaffold the knowledge base, then use `/learn` or the MCP tools to populate it.
+  The `serve`, `status`, and `clean` subcommands remain unchanged.
+
 ## [3.0.1] - 2026-04-20
 
 ### Fixed

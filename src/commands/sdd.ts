@@ -413,6 +413,103 @@ export const sddCommand: CommandModule<{}, SddArgs> = {
           }
         }
       )
+
+      // ─── sdd remove ────────────────────────────────────────
+      .command(
+        'remove <feature-name>',
+        'Remove an SDD feature and all its artifacts',
+        (y) =>
+          y.positional('feature-name', {
+            type: 'string',
+            description: 'Feature name to remove',
+            demandOption: true,
+          })
+          .option('yes', { type: 'boolean', description: 'Skip confirmation', alias: 'y' }),
+        async (argv) => {
+          try {
+            const featureName = argv['feature-name'] as string
+            const projectRoot = (await findProjectRoot()) || process.cwd()
+            const config = await readConfig(projectRoot)
+            if (!config) {
+              logger.error('No .dotai.json found. Run `dotai init` first.')
+              process.exit(1)
+            }
+
+            const aiDir = config.aiDir || '.ai'
+            await requireSddInit(projectRoot, aiDir)
+
+            logger.title(`dotai sdd remove — ${featureName}`)
+            logger.newline()
+
+            const sddPath = join(projectRoot, aiDir, 'sdd')
+            const featurePath = join(sddPath, featureName)
+
+            // Check feature exists
+            if (!(await dirExists(featurePath))) {
+              logger.error(`Feature '${featureName}' not found at ${aiDir}/sdd/${featureName}/`)
+              const features = await listFeatures(sddPath)
+              if (features.length > 0) {
+                logger.newline()
+                logger.dim('Available features:')
+                for (const f of features) {
+                  logger.dim(`  • ${f}`)
+                }
+              }
+              process.exit(1)
+            }
+
+            // Show what will be deleted
+            const info = await detectFeaturePhase(featurePath)
+            const phase = phaseDisplay(info.phase, info.phaseName)
+            logger.info(`Feature: ${pc.bold(featureName)}`)
+            logger.info(`Current: ${phase}`)
+
+            // Count files
+            const { countFiles } = await import('../utils/fs')
+            const fileCount = await countFiles(featurePath)
+            logger.info(`Files:   ${fileCount} file(s) in ${aiDir}/sdd/${featureName}/`)
+
+            if (info.taskCount > 0) logger.dim(`  ${info.taskCount} task(s)`)
+            if (info.planCount > 0) logger.dim(`  ${info.planCount} plan(s)`)
+            if (info.resultCount > 0) logger.dim(`  ${info.resultCount} evaluation result(s)`)
+            if (info.hasCodeReview) logger.dim(`  1 code review`)
+
+            logger.newline()
+
+            // Confirm
+            if (!argv.yes) {
+              const { promptConfirm } = await import('../utils/prompt')
+              const confirmed = await promptConfirm(
+                `Delete feature '${featureName}' and all ${fileCount} file(s)? This cannot be undone.`,
+                false
+              )
+              if (!confirmed) {
+                logger.dim('Aborted.')
+                return
+              }
+            }
+
+            // Delete
+            const { rm } = await import('fs/promises')
+            await rm(featurePath, { recursive: true, force: true })
+
+            logger.newline()
+            logger.success(`Feature '${featureName}' removed — ${fileCount} file(s) deleted`)
+
+            // Show remaining features
+            const remaining = await listFeatures(sddPath)
+            if (remaining.length > 0) {
+              logger.dim(`${remaining.length} feature(s) remaining`)
+            } else {
+              logger.dim('No features remaining. Create one with: dotai sdd new <name>')
+            }
+          } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : String(err)
+            logger.error(`SDD remove failed: ${message}`)
+            process.exit(1)
+          }
+        }
+      )
       .demandCommand(1, 'Specify a subcommand. Run `dotai sdd --help` for usage.')
       .strict(),
 

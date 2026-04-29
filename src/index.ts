@@ -13,6 +13,11 @@ import { doctorCommand } from './commands/doctor'
 import { knowledgeCommand } from './commands/knowledge'
 import { sddCommand } from './commands/sdd'
 import { upgradeCommand } from './commands/upgrade'
+import { mcpCommand } from './commands/mcp'
+import { skillCommand } from './commands/skill'
+import { ruleCommand } from './commands/rule'
+import { cmdCommand } from './commands/cmd'
+import { configCommand } from './commands/config-cmd'
 import { VERSION } from './version'
 
 const cli = yargs(hideBin(process.argv))
@@ -34,6 +39,11 @@ const cli = yargs(hideBin(process.argv))
   .command(knowledgeCommand)
   .command(sddCommand)
   .command(upgradeCommand)
+  .command(mcpCommand)
+  .command(skillCommand)
+  .command(ruleCommand)
+  .command(cmdCommand)
+  .command(configCommand)
   .demandCommand(1, 'Specify a command. Run `dotai --help` for usage.')
   .strict()
 

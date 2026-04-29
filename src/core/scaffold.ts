@@ -73,7 +73,7 @@ that saves you from re-discovering what previous sessions already learned.
 
 If the knowledge base does not exist yet, suggest the user runs:
 \\\`\\\`\\\`bash
-dotai knowledge scan
+dotai knowledge init
 \\\`\\\`\\\`
 
 ## 🧠 Auto-Persist Rule (MANDATORY)
@@ -99,7 +99,7 @@ as a side effect of your work, not as a separate step the user requests.
 
 ### How to persist (in order of preference):
 1. **MCP tool** — call \\\`knowledge_append\\\` directly (no user interaction needed)
-2. **Shell command** — run \\\`dotai knowledge append --gotchas --finding "..." --agent "your-name"\\\`
+2. **Direct file edit** — append to \`.ai/knowledge/gotchas.md\` or \`.ai/knowledge/patterns.md\` directly
 
 ### What NOT to persist:
 - Information already in the knowledge base (check first)
@@ -113,6 +113,18 @@ as a side effect of your work, not as a separate step the user requests.
 - Use \\\`target: "gotchas"\\\` for edge cases, bugs, constraints
 - Use \\\`target: "patterns"\\\` for recurring code patterns
 - Use \\\`module: "<name>"\\\` for module-specific discoveries
+
+## 📏 Coding Rules (MANDATORY)
+
+**YOU MUST follow all coding rules** defined in \`.ai/rules/\` on every request.
+
+Each \`.md\` file in the \`rules/\` directory is a coding rule. Rules with \`alwaysApply: true\`
+in their YAML frontmatter must be applied unconditionally to every response. Rules with
+\`alwaysApply: false\` should be applied when the topic is relevant.
+
+Before writing or modifying code, read and apply all active rules from \`.ai/rules/\`.
+These rules define project-specific coding conventions, security requirements, and
+testing standards that override general best practices.
 
 ## 📋 MCP Server Reference
 
@@ -353,7 +365,7 @@ description: Example workflow for common tasks
 When you discover something important about the codebase that is not already documented,
 persist it to the knowledge base so future sessions benefit immediately.
 
-## Method 1 — MCP Tool (preferred)
+## MCP Tool (preferred)
 
 If the \\\`dotai-knowledge\\\` MCP server is available, use the \\\`knowledge_append\\\` tool directly:
 
@@ -362,16 +374,13 @@ If the \\\`dotai-knowledge\\\` MCP server is available, use the \\\`knowledge_ap
 - **finding**: your discovery — be specific, include file/function names, explain WHY
 - **agent**: your name (e.g. "claude", "gemini")
 
-## Method 2 — Shell Command (always works)
+## Direct File Edit (fallback)
 
-### For general gotchas (edge cases, bugs fixed, things to never do):
-Run: \\\`dotai knowledge append --gotchas --finding "<your discovery>" --agent "claude"\\\`
+If MCP is not available, append findings directly to the markdown files:
 
-### For patterns (recurring code patterns you notice):
-Run: \\\`dotai knowledge append --patterns --finding "<your discovery>" --agent "claude"\\\`
-
-### For module-specific findings:
-Run: \\\`dotai knowledge append --module <module-name> --finding "<your discovery>" --agent "claude"\\\`
+- \`.ai/knowledge/gotchas.md\` — for edge cases, bugs, and do-NOT rules
+- \`.ai/knowledge/patterns.md\` — for recurring code patterns
+- \`.ai/knowledge/modules/<name>.md\` — for module-specific findings
 
 ## Guidelines for good findings:
 - Be specific: include file names, function names, variable names
@@ -382,14 +391,130 @@ Run: \\\`dotai knowledge append --module <module-name> --finding "<your discover
 - Do NOT persist things that are trivially obvious from reading the code
 `,
 
+    'git-stage-commit.md': `# /git-stage-commit — Stage & Commit (No Push)
+
+Stage all unstaged and modified changes and commit them locally. Do NOT push.
+
+## Instructions
+
+1. **Check the knowledge base** — If \`.ai/knowledge/\` exists but \`gotchas.md\` and \`patterns.md\`
+   are empty (no \`### \` entries), first run the /learn flow to populate the knowledge base
+   before committing.
+
+2. **Stage all changes** — Run:
+   \\\`\\\`\\\`bash
+   git add -A
+   \\\`\\\`\\\`
+
+3. **Review staged changes** — Run \`git diff --cached --stat\` to summarize what's being committed.
+
+4. **Generate a commit message** — Based on the staged diff, write a clear, conventional commit
+   message following this format:
+   - Use conventional commit prefixes: \`feat:\`, \`fix:\`, \`refactor:\`, \`docs:\`, \`chore:\`, \`test:\`, etc.
+   - First line: concise summary (max 72 chars)
+   - Optional body: explain WHY, not what (the diff shows what)
+   - If multiple unrelated changes are staged, use the most significant one for the prefix
+
+5. **Commit locally** — Run:
+   \\\`\\\`\\\`bash
+   git commit -m "<your generated message>"
+   \\\`\\\`\\\`
+
+6. **Do NOT push** — This is a local commit only.
+
+7. **Report** — Show the commit hash, message, and file count.
+`,
+
+    'git-stage-commit.toml': `description = "Stage all changes and commit locally with a relevant message (no push)"
+prompt = """
+Stage all unstaged and modified changes and commit them locally. Do NOT push.
+
+1. Check if .ai/knowledge/ exists but gotchas.md and patterns.md are empty.
+   If so, first explore the codebase and populate the knowledge base.
+
+2. Run: git add -A
+
+3. Run: git diff --cached --stat  to review what is staged.
+
+4. Generate a conventional commit message based on the diff:
+   - Use prefixes: feat:, fix:, refactor:, docs:, chore:, test:
+   - First line max 72 chars
+   - Optional body explaining WHY
+
+5. Run: git commit -m "<generated message>"
+
+6. Do NOT push. Report the commit hash, message, and file count.
+
+{{args}}
+"""
+`,
+
+    'git-stage-commit-workflow.md': `# /git-stage-commit — Stage & Commit (No Push)
+
+Stage all unstaged and modified changes and commit them locally. Do NOT push.
+
+## Instructions
+
+1. **Check the knowledge base** — If \`.ai/knowledge/\` exists but \`gotchas.md\` and \`patterns.md\`
+   are empty (no \`### \` entries), first run the /learn flow to populate the knowledge base
+   before committing.
+
+2. **Stage all changes** — Run:
+   \\\`\\\`\\\`bash
+   git add -A
+   \\\`\\\`\\\`
+
+3. **Review staged changes** — Run \`git diff --cached --stat\` to summarize what's being committed.
+
+4. **Generate a commit message** — Based on the staged diff, write a clear, conventional commit
+   message following this format:
+   - Use conventional commit prefixes: \`feat:\`, \`fix:\`, \`refactor:\`, \`docs:\`, \`chore:\`, \`test:\`, etc.
+   - First line: concise summary (max 72 chars)
+   - Optional body: explain WHY, not what (the diff shows what)
+   - If multiple unrelated changes are staged, use the most significant one for the prefix
+
+5. **Commit locally** — Run:
+   \\\`\\\`\\\`bash
+   git commit -m "<your generated message>"
+   \\\`\\\`\\\`
+
+6. **Do NOT push** — This is a local commit only.
+
+7. **Report** — Show the commit hash, message, and file count.
+`,
+
+    'git-stage-commit-prompt.md': `---
+mode: agent
+description: Stage all changes and commit locally with a relevant message (no push)
+---
+
+Stage all unstaged and modified changes and commit them locally. Do NOT push.
+
+1. Check if .ai/knowledge/ exists but gotchas.md and patterns.md are empty.
+   If so, first explore the codebase and populate the knowledge base.
+
+2. Run: git add -A
+
+3. Run: git diff --cached --stat  to review what is staged.
+
+4. Generate a conventional commit message based on the diff:
+   - Use prefixes: feat:, fix:, refactor:, docs:, chore:, test:
+   - First line max 72 chars
+   - Optional body explaining WHY
+
+5. Run: git commit -m "<generated message>"
+
+6. Do NOT push. Report the commit hash, message, and file count.
+`,
+
     'knowledge-index.md': `<!-- AUTO-GENERATED: safe to edit, do not delete header -->
 # Codebase Knowledge Index
-> Generated by dotai knowledge scan | Run \`dotai knowledge scan\` to update
+> Populated by AI agents using the /learn command or knowledge_explore + knowledge_append tools.
 
 This file has not been populated yet. Run:
 
-\`\`\`bash
-dotai knowledge scan
+\`\`\`
+/learn
 \`\`\`
 `,
 
@@ -397,7 +522,7 @@ dotai knowledge scan
 # Code Patterns
 
 > Recurring patterns discovered in this codebase.
-> Added by: dotai scanner, AI agents (/learn command), and humans.
+> Added by: AI agents (/learn command) and humans.
 
 <!-- Add patterns below. Format:
 ## Pattern Name
@@ -411,7 +536,7 @@ dotai knowledge scan
 # Gotchas & Edge Cases
 
 > Things that are NOT obvious from reading the code.
-> Added by: dotai scanner, AI agents (/learn command), and humans.
+> Added by: AI agents (/learn command) and humans.
 
 <!-- Add gotchas below. Format:
 ## Gotcha Title
@@ -424,8 +549,7 @@ dotai knowledge scan
     'knowledge-changelog.md': `<!-- AUTO-GENERATED: safe to edit, do not delete header -->
 # Knowledge Changelog
 
-> Automatically updated by dotai on each git commit (when hook is installed).
-> Also updated manually via \`dotai knowledge update\`.
+> Updated by AI agents as they discover and persist codebase knowledge.
 
 <!-- Entries are prepended (newest first) -->
 `,
@@ -451,15 +575,18 @@ dotai manages your AI coding tool configurations from a single \`.ai/\` folder. 
 ├── commands/               ← Custom slash commands (Claude Code, .md)
 │   ├── review.md           ← /review command
 │   ├── deploy.md           ← /deploy command
-│   └── learn.md            ← /learn command (agent write-back)
+│   ├── learn.md            ← /learn command (agent write-back)
+│   └── git-stage-commit.md ← /git-stage-commit (stage + commit, no push)
 ├── commands-gemini/        ← Custom commands for Gemini CLI (.toml)
 │   ├── review.toml         ← /review command
-│   └── deploy.toml         ← /deploy command
+│   ├── deploy.toml         ← /deploy command
+│   └── git-stage-commit.toml ← /git-stage-commit
 ├── skills/                 ← Reusable skill packages
 │   └── example-skill/
 │       └── SKILL.md
 ├── workflows/              ← Workflow definitions (Antigravity)
-│   └── example.md
+│   ├── example.md
+│   └── git-stage-commit.md ← /git-stage-commit
 ├── settings/               ← Per-tool JSON settings
 │   ├── claude.json         ← Claude Code permissions & settings
 │   └── gemini.json         ← Gemini CLI / Antigravity settings
@@ -487,7 +614,9 @@ When you run \`dotai link\`, symlinks are created so each tool reads from \`.ai/
 | \`AI.md\`                     | \`GEMINI.md\`                          | Gemini CLI / Antigravity |
 | \`AI.md\`                     | \`AGENTS.md\`                          | Antigravity          |
 | \`AI.md\`                     | \`.github/copilot-instructions.md\`    | GitHub Copilot       |
-| \`rules/\`                    | \`.gemini/rules/\`                     | Antigravity          |
+| \`rules/\`                    | \`.claude/rules/\`                      | Claude Code          |
+| \`rules/\`                    | \`.gemini/rules/\`                      | Gemini CLI           |
+| \`rules/\`                    | \`.agents/rules/\`                      | Antigravity          |
 | \`commands/\`                 | \`.claude/commands/\`                  | Claude Code          |
 | \`commands-gemini/\`          | \`.gemini/commands/\`                  | Gemini CLI           |
 | \`skills/\`                   | \`.claude/skills/\`                    | Claude Code          |
@@ -511,35 +640,30 @@ re-exploring the same code from scratch.
 ### Initialize
 
 \`\`\`bash
-dotai knowledge scan          # scan codebase → populate .ai/knowledge/
-dotai knowledge hook install  # auto-update knowledge on every git commit
+dotai knowledge init          # scaffold knowledge directory + /learn command
 \`\`\`
 
-### Step 2: Populate with Your AI Agent
+Then ask your AI agent:
+\`\`\`
+/learn
+\`\`\`
 
-\`dotai knowledge scan\` creates the knowledge **skeleton** (module files, index, basic exports).
+\`dotai knowledge init\` creates the knowledge **skeleton** (directory structure, skill, /learn command).
 The deep insights come from your **AI agent** using dotai MCP tools.
 
-Open your AI agent and use this prompt:
-\`\`\`
-Use knowledge_explore to analyze the entire codebase directory by directory.
-For each module, use knowledge_append to persist patterns, gotchas, and insights.
-Then use knowledge_populate_ai_md to fill in the AI.md with project overview,
-architecture, tech stack, key commands, constraints, and common pitfalls.
-\`\`\`
-
-> **Why two steps?** The CLI scanner is fast but shallow. AI agents understand
-> semantics — they identify patterns, gotchas, and architecture that no static scanner can.
+> **Why AI-driven?** CLI scanners extract exports and file structure but miss context.
+> AI agents understand semantics — they identify patterns, gotchas, and architecture
+> that no static scanner can.
 
 ### Files in \`.ai/knowledge/\`
 
 | File | Purpose | Updated by |
 |------|---------|------------|
-| \`INDEX.md\` | High-level module map + symbol table | Auto (scanner) |
-| \`modules/<name>.md\` | Deep per-module summary | Auto (scanner) + humans/agents |
-| \`patterns.md\` | Recurring code patterns | Humans + agents (/learn) |
-| \`gotchas.md\` | Edge cases and do-NOT rules | Humans + agents (/learn) |
-| \`changelog.md\` | Recent code changes | Auto (git hook) |
+| \`INDEX.md\` | High-level module map + symbol table | AI agents (/learn) |
+| \`modules/<name>.md\` | Deep per-module summary | AI agents + humans |
+| \`patterns.md\` | Recurring code patterns | AI agents + humans |
+| \`gotchas.md\` | Edge cases and do-NOT rules | AI agents + humans |
+| \`changelog.md\` | Recent code changes | AI agents |
 | \`decisions/*.md\` | Architecture decisions | Humans only |
 
 ### Agent Integration
@@ -632,12 +756,20 @@ JSON config files for specific tools (permissions, preferences).
 | \`dotai doctor\`       | Diagnose and auto-fix all issues          |
 | \`dotai upgrade\`      | Update .ai/ templates to latest version   |
 | \`dotai list --all\`   | Show all supported tools                  |
-| \`dotai knowledge scan\`    | Scan codebase → generate .ai/knowledge/    |
-| \`dotai knowledge watch\`   | Auto-update knowledge on file changes       |
-| \`dotai knowledge serve\`   | Start MCP server for agent tool access      |
-| \`dotai knowledge hook\`    | Manage git post-commit hook                 |
-| \`dotai knowledge status\`  | Show knowledge base health                  |
-| \`dotai knowledge append\`  | Add a finding to gotchas or module          |
+| \`dotai mcp add <name>\`    | Add an MCP server to all tool settings     |
+| \`dotai mcp remove <name>\` | Remove an MCP server from settings         |
+| \`dotai mcp list\`          | List all configured MCP servers            |
+| \`dotai skill add <name>\`  | Create a skill package                     |
+| \`dotai skill list\`        | List all skills                            |
+| \`dotai rule add <name>\`   | Create a coding rule                       |
+| \`dotai rule list\`         | List all rules                             |
+| \`dotai cmd add <name>\`    | Create a slash command for all tools       |
+| \`dotai cmd list\`          | List all commands                          |
+| \`dotai config show\`       | View full .dotai.json config               |
+| \`dotai knowledge init\`    | Initialize knowledge base + /learn command |
+| \`dotai knowledge serve\`   | Start MCP server for agent tool access     |
+| \`dotai knowledge status\`  | Show knowledge base health                 |
+| \`dotai knowledge clean\`   | Delete knowledge base for fresh start      |
 
 ## Git Rules
 
@@ -664,14 +796,18 @@ export function getScaffoldTemplateFiles(tools: string[]): TemplateFile[] {
     { relPath: 'commands/review.md', templateName: 'review.md', content: '' },
     { relPath: 'commands/deploy.md', templateName: 'deploy.md', content: '' },
     { relPath: 'commands/learn.md', templateName: 'learn.md', content: '' },
+    { relPath: 'commands/git-stage-commit.md', templateName: 'git-stage-commit.md', content: '' },
     { relPath: 'commands-gemini/review.toml', templateName: 'review.toml', content: '', toolSpecific: ['gemini'] },
     { relPath: 'commands-gemini/deploy.toml', templateName: 'deploy.toml', content: '', toolSpecific: ['gemini'] },
+    { relPath: 'commands-gemini/git-stage-commit.toml', templateName: 'git-stage-commit.toml', content: '', toolSpecific: ['gemini'] },
     { relPath: 'prompts/example.prompt.md', templateName: 'example-prompt.md', content: '', toolSpecific: ['copilot'] },
+    { relPath: 'prompts/git-stage-commit.prompt.md', templateName: 'git-stage-commit-prompt.md', content: '', toolSpecific: ['copilot'] },
     { relPath: 'instructions/backend.instructions.md', templateName: 'backend-instructions.md', content: '', toolSpecific: ['copilot'] },
     { relPath: 'settings/claude.json', templateName: 'settings-claude.json', content: '', toolSpecific: ['claude'] },
     { relPath: 'settings/gemini.json', templateName: 'settings-gemini.json', content: '', toolSpecific: ['gemini', 'antigravity'] },
     { relPath: 'ignore/.aiignore', templateName: 'aiignore', content: '' },
     { relPath: 'workflows/example.md', templateName: 'example-workflow.md', content: '', toolSpecific: ['antigravity'] },
+    { relPath: 'workflows/git-stage-commit.md', templateName: 'git-stage-commit-workflow.md', content: '', toolSpecific: ['antigravity'] },
     { relPath: 'knowledge/INDEX.md', templateName: 'knowledge-index.md', content: '' },
     { relPath: 'knowledge/patterns.md', templateName: 'knowledge-patterns.md', content: '' },
     { relPath: 'knowledge/gotchas.md', templateName: 'knowledge-gotchas.md', content: '' },

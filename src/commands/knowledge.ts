@@ -1,30 +1,18 @@
 import type { CommandModule } from 'yargs'
-import { join, relative } from 'path'
-import { readFile, rm } from 'fs/promises'
+import { join } from 'path'
+import { rm, readdir } from 'fs/promises'
 import { logger } from '../utils/logger'
 import { readConfig, writeConfig, findProjectRoot, getKnowledgeConfig } from '../core/config'
 import { pathExists, ensureDir, writeTextFile, readTextFile } from '../utils/fs'
-import { KnowledgeScanner } from '../core/knowledge/scanner'
-import { KnowledgeRenderer } from '../core/knowledge/renderer'
-import { KnowledgeWatcher } from '../core/knowledge/watcher'
 import { KnowledgeMcpServer } from '../core/knowledge/mcp'
-import {
-  getCurrentCommitHash,
-  getCurrentCommitMessage,
-  getChangedFiles,
-  installGitHook,
-  uninstallGitHook,
-  isGitHookInstalled,
-} from '../core/knowledge/git'
-import type { KnowledgeConfig } from '../core/knowledge/types'
+import { getToolById } from '../core/registry'
+import { createSymlink } from '../core/symlink'
 import { VERSION } from '../version'
 
-interface KnowledgeArgs {
-  silent?: boolean
-}
+interface KnowledgeArgs {}
 
 /**
- * Check that dotai has been initialized (i.e. .dotai.json exists).
+ * Check that dotai has been initialized.
  */
 async function requireInit(projectRoot: string): Promise<import('../core/config').DotAiConfig> {
   const config = await readConfig(projectRoot)
@@ -35,322 +23,320 @@ async function requireInit(projectRoot: string): Promise<import('../core/config'
   return config
 }
 
-/**
- * Check that the knowledge directory exists, or print actionable error.
- */
-async function requireKnowledgeDir(knowledgePath: string): Promise<boolean> {
-  if (!(await pathExists(knowledgePath))) {
-    logger.error("No knowledge base found. Run 'dotai knowledge scan' first.")
-    return false
-  }
-  return true
-}
-
-/**
- * Get the knowledge path for a project.
- */
 function getKnowledgePath(projectRoot: string, aiDir: string): string {
   return join(projectRoot, aiDir, 'knowledge')
 }
 
-/**
- * Run a full or module-specific scan.
- */
-async function runScan(
-  projectRoot: string,
-  knowledgePath: string,
-  config: KnowledgeConfig,
-  options: { module?: string; dryRun?: boolean; silent?: boolean }
-): Promise<{ moduleCount: number; fileCount: number }> {
-  const scanner = new KnowledgeScanner(projectRoot, config)
-  const renderer = new KnowledgeRenderer()
+// ─── Skeleton templates for knowledge files ──────────────────────────────
 
-  if (options.module) {
-    const modPath = join(projectRoot, options.module)
-    if (!(await pathExists(modPath))) {
-      throw new Error(`Module path not found: ${options.module}`)
-    }
-    const mod = await scanner.scanModule(modPath)
-    const resolved = [mod] // Single module, deps not resolved across project
+const SKELETON_INDEX = `<!-- AUTO-GENERATED: safe to edit, do not delete header -->
+# Codebase Knowledge Index
 
-    if (!options.dryRun) {
-      await ensureDir(join(knowledgePath, 'modules'))
-      await writeModuleFile(knowledgePath, mod, renderer)
-    }
+> This file maps your codebase modules, exports, and dependencies.
+> Populated by AI agents using the /learn command or knowledge_explore + knowledge_append tools.
 
-    return { moduleCount: 1, fileCount: mod.files.length }
-  }
+## Module Map
 
-  const result = await scanner.scanAll()
+| Module | Path | Key Exports | Files |
+|--------|------|-------------|-------|
+<!-- Add modules as you explore the codebase -->
 
-  if (options.dryRun) {
-    if (!options.silent) {
-      logger.info('[DRY RUN] Would scan:')
-      for (const mod of result.modules) {
-        logger.dim(`  ${mod.name} — ${mod.files.length} files`)
+## Dependency Graph
+
+<!-- Describe how modules depend on each other -->
+
+## Quick Reference
+
+<!-- High-level architecture summary -->
+`
+
+const SKELETON_PATTERNS = `<!-- AUTO-GENERATED: safe to edit, do not delete header -->
+# Patterns
+
+> Recurring code patterns in this project.
+> Added by: AI agents (/learn command) and humans.
+`
+
+const SKELETON_GOTCHAS = `<!-- AUTO-GENERATED: safe to edit, do not delete header -->
+# Gotchas & Edge Cases
+
+> Things that are NOT obvious from reading the code.
+> Added by: AI agents (/learn command) and humans.
+`
+
+const SKELETON_CHANGELOG = `<!-- AUTO-GENERATED: safe to edit, do not delete header -->
+# Changelog
+
+> Recent codebase changes tracked by AI agents.
+> Entries are prepended (newest first).
+
+<!-- Entries are prepended (newest first) -->
+`
+
+// ─── Skill template ──────────────────────────────────────────────────────
+
+const LEARN_SKILL = `---
+description: Deep codebase analysis and knowledge population skill
+---
+
+# Knowledge Scan Skill
+
+You are performing a deep analysis of the project codebase. Your goal is to explore
+every module, understand the architecture, and persist your findings to the knowledge
+base so future sessions don't need to re-discover what you learn now.
+
+## Instructions
+
+1. **Read existing knowledge first** — check \`.ai/knowledge/INDEX.md\`, \`gotchas.md\`,
+   \`patterns.md\`, and \`modules/\` to avoid duplicating what's already there.
+
+2. **Explore the codebase systematically** — use \`knowledge_explore\` (MCP) or read
+   files directly. Start from the project root, then go deeper into each major directory.
+
+3. **For each module/directory you explore:**
+   - Identify key exports, classes, and functions
+   - Note dependencies on other modules
+   - Look for recurring patterns
+   - Spot gotchas, edge cases, and non-obvious constraints
+   - Check for undocumented configuration or environment requirements
+
+4. **Persist findings immediately** — for each discovery:
+   - Use \`knowledge_append\` with \`target: "gotchas"\` for edge cases and constraints
+   - Use \`knowledge_append\` with \`target: "patterns"\` for recurring patterns
+   - Use \`knowledge_append\` with \`module: "<name>"\` for module-specific findings
+
+5. **Update AI.md** — use \`knowledge_populate_ai_md\` to fill in:
+   - Project Overview
+   - Architecture (directory → purpose mapping)
+   - Tech Stack (with versions)
+   - Key Commands (build, test, dev)
+   - Important Constraints
+   - Common Pitfalls
+
+6. **Update INDEX.md** — manually edit \`.ai/knowledge/INDEX.md\` to add a row for
+   each module you analyzed with its path, key exports, and file count.
+
+## What NOT to persist
+- Trivially obvious information readable from the code
+- Task-specific context that won't help future sessions
+- Information already in the knowledge base
+`
+
+// ─── Slash command templates ─────────────────────────────────────────────
+
+function getLearnCommandClaude(): string {
+  return `# /learn — Deep Codebase Scan
+
+Perform a comprehensive scan of the entire codebase and populate the knowledge base.
+
+## Instructions
+
+Read the skill file at \`.ai/skills/knowledge-scan-skill/SKILL.md\` and follow its
+instructions to explore the codebase, analyze it deeply, and persist all findings
+to \`.ai/knowledge/\`.
+
+Start by checking what's already in the knowledge base, then systematically explore
+every directory and file. Persist each finding immediately — don't batch them.
+
+When done, report a summary of what you learned and what was persisted.
+`
+}
+
+function getLearnCommandGemini(): string {
+  return `[command]
+description = "Deep codebase scan — explore all modules and populate .ai/knowledge/"
+
+[command.instructions]
+text = """
+Read the skill file at \`.ai/skills/knowledge-scan-skill/SKILL.md\` and follow its
+instructions to explore the codebase, analyze it deeply, and persist all findings
+to \`.ai/knowledge/\`.
+
+Start by checking what's already in the knowledge base, then systematically explore
+every directory and file. Persist each finding immediately.
+
+When done, report a summary of what you learned and what was persisted.
+"""
+`
+}
+
+function getLearnCommandAntigravity(): string {
+  return `# /learn — Deep Codebase Scan
+
+Perform a comprehensive scan of the entire codebase and populate the knowledge base.
+
+## Instructions
+
+Read the skill file at \`.ai/skills/knowledge-scan-skill/SKILL.md\` and follow its
+instructions to explore the codebase, analyze it deeply, and persist all findings
+to \`.ai/knowledge/\`.
+
+Start by checking what's already in the knowledge base, then systematically explore
+every directory and file. Persist each finding immediately — don't batch them.
+
+When done, report a summary of what you learned and what was persisted.
+`
+}
+
+function getLearnCommandCopilot(): string {
+  return `---
+mode: agent
+description: Deep codebase scan — explore all modules and populate .ai/knowledge/
+---
+
+Read the skill file at \`.ai/skills/knowledge-scan-skill/SKILL.md\` and follow its
+instructions to explore the codebase, analyze it deeply, and persist all findings
+to \`.ai/knowledge/\`.
+
+Start by checking what's already in the knowledge base, then systematically explore
+every directory and file. Persist each finding immediately.
+
+When done, report a summary of what you learned and what was persisted.
+`
+}
+
+// ─── Symlink refresh helper ──────────────────────────────────────────────
+
+async function refreshSymlinks(projectRoot: string, aiDir: string, tools: string[]): Promise<void> {
+  const sources = ['knowledge', 'skills', 'commands', 'commands-gemini', 'workflows', 'prompts']
+  for (const toolId of tools) {
+    const tool = getToolById(toolId)
+    if (!tool) continue
+    for (const link of tool.links) {
+      if (sources.includes(link.source)) {
+        const src = join(projectRoot, aiDir, link.source)
+        if (await pathExists(src)) {
+          await createSymlink(src, join(projectRoot, link.target), { force: false })
+        }
       }
     }
-    return { moduleCount: result.modules.length, fileCount: result.totalFiles }
-  }
-
-  // Ensure directories exist
-  await ensureDir(join(knowledgePath, 'modules'))
-  await ensureDir(join(knowledgePath, 'decisions'))
-
-  // Write INDEX.md (always overwrite)
-  const indexContent = renderer.renderIndex(result)
-  await writeTextFile(join(knowledgePath, 'INDEX.md'), indexContent)
-
-  // Write module files (merge if existing)
-  for (const mod of result.modules) {
-    await writeModuleFile(knowledgePath, mod, renderer)
-  }
-
-  // Write skeleton files if they don't exist
-  await writeSkeletonIfMissing(join(knowledgePath, 'patterns.md'), renderer.renderPatterns())
-  await writeSkeletonIfMissing(join(knowledgePath, 'gotchas.md'), renderer.renderGotchas())
-  await writeSkeletonIfMissing(join(knowledgePath, 'changelog.md'), renderer.renderChangelog())
-
-  return { moduleCount: result.modules.length, fileCount: result.totalFiles }
-}
-
-/**
- * Write a module file, merging with existing content if present.
- */
-async function writeModuleFile(
-  knowledgePath: string,
-  mod: import('../core/knowledge/types').ModuleInfo,
-  renderer: KnowledgeRenderer
-): Promise<void> {
-  const filePath = join(knowledgePath, 'modules', `${mod.name}.md`)
-  const newContent = renderer.renderModule(mod)
-
-  if (await pathExists(filePath)) {
-    const existing = await readTextFile(filePath)
-    const merged = renderer.mergeModuleContent(existing, newContent)
-    await writeTextFile(filePath, merged)
-  } else {
-    await writeTextFile(filePath, newContent)
   }
 }
 
-/**
- * Write a file only if it doesn't already exist.
- */
-async function writeSkeletonIfMissing(filePath: string, content: string): Promise<void> {
-  if (!(await pathExists(filePath))) {
-    await writeTextFile(filePath, content)
-  }
+// ─── Command targets for /learn ──────────────────────────────────────────
+
+interface CmdTarget {
+  toolId: string
+  dir: string
+  filename: string
+  content: () => string
 }
 
-/**
- * Run incremental update from git diff.
- */
-async function runUpdate(
-  projectRoot: string,
-  knowledgePath: string,
-  config: KnowledgeConfig,
-  silent: boolean
-): Promise<number> {
-  const allChangedFiles = await getChangedFiles(projectRoot)
+const LEARN_CMD_TARGETS: CmdTarget[] = [
+  { toolId: 'claude', dir: 'commands', filename: 'learn.md', content: getLearnCommandClaude },
+  { toolId: 'gemini', dir: 'commands-gemini', filename: 'learn.toml', content: getLearnCommandGemini },
+  { toolId: 'antigravity', dir: 'workflows', filename: 'learn.md', content: getLearnCommandAntigravity },
+  { toolId: 'copilot', dir: 'prompts', filename: 'learn.prompt.md', content: getLearnCommandCopilot },
+]
 
-  // Filter out knowledge files — they must never trigger their own re-scan
-  const knowledgeRelative = relative(projectRoot, knowledgePath)
-  const changedFiles = allChangedFiles.filter(
-    (f) => !f.startsWith(knowledgeRelative + '/') && !f.startsWith('.ai/knowledge/')
-  )
-
-  if (changedFiles.length === 0) {
-    if (!silent) logger.dim('No changed files since last commit')
-    return 0
-  }
-
-  const scanner = new KnowledgeScanner(projectRoot, config)
-  const renderer = new KnowledgeRenderer()
-
-  const modules = await scanner.scanChanged(changedFiles)
-
-  // Update module files
-  await ensureDir(join(knowledgePath, 'modules'))
-  for (const mod of modules) {
-    await writeModuleFile(knowledgePath, mod, renderer)
-  }
-
-  // Append to changelog
-  // In silent mode (hook), don't record commit hash — it will change after amend.
-  // Use commit message for dedup since message is preserved by --no-edit amend.
-  const commitMessage = await getCurrentCommitMessage(projectRoot) ?? 'no message'
-  const commitHash = silent ? 'hook' : (await getCurrentCommitHash(projectRoot) ?? 'unknown')
-  const changelogPath = join(knowledgePath, 'changelog.md')
-
-  if (await pathExists(changelogPath)) {
-    const existing = await readTextFile(changelogPath)
-    // Dedup by commit message to prevent duplicates from hook re-runs
-    if (!existing.includes(commitMessage)) {
-      const updated = renderer.appendChangelogEntry(existing, changedFiles, commitHash, commitMessage)
-      await writeTextFile(changelogPath, updated)
-    }
-  }
-
-  // Regenerate INDEX.md
-  const result = await scanner.scanAll()
-  const indexContent = renderer.renderIndex(result)
-  await writeTextFile(join(knowledgePath, 'INDEX.md'), indexContent)
-
-  return modules.length
-}
+// ═══════════════════════════════════════════════════════════════════════════
 
 export const knowledgeCommand: CommandModule<{}, KnowledgeArgs> = {
   command: 'knowledge <subcommand>',
   describe: 'Manage persistent codebase knowledge base',
   builder: (yargs) =>
     yargs
+
+      // ─── knowledge init ─────────────────────────────────────
       .command(
-        'scan [path]',
-        'Scan codebase and generate knowledge files',
+        'init',
+        'Initialize knowledge base with directory structure, AI skills, and /learn commands',
         (y) =>
           y
-            .positional('path', { type: 'string', description: 'Project path (default: cwd)' })
-            .option('depth', { type: 'number', description: 'Module depth', alias: 'n' })
-            .option('module', { type: 'string', description: 'Scan only this module path' })
-            .option('silent', { type: 'boolean', description: 'Suppress output' })
-            .option('dry-run', { type: 'boolean', description: 'Preview without writing' }),
+            .option('force', {
+              type: 'boolean',
+              description: 'Re-write skill and command files (preserves knowledge data)',
+            }),
         async (argv) => {
           try {
-            const silent = argv.silent || false
-            const projectRoot = argv.path || (await findProjectRoot()) || process.cwd()
+            const projectRoot = (await findProjectRoot()) || process.cwd()
             const config = await requireInit(projectRoot)
-
-            if (!silent) {
-              logger.title(`dotai knowledge scan — v${VERSION}`)
-              logger.newline()
-            }
-
-            const aiDir = config.aiDir
-            const knowledgeConfig: KnowledgeConfig = {
-              ...getKnowledgeConfig(config),
-              ...(argv.depth ? { scanDepth: argv.depth } : {}),
-            }
-
+            const aiDir = config.aiDir || '.ai'
             const knowledgePath = getKnowledgePath(projectRoot, aiDir)
+            const force = argv.force || false
 
-            const { moduleCount, fileCount } = await runScan(
-              projectRoot,
-              knowledgePath,
-              knowledgeConfig,
-              { module: argv.module, dryRun: argv['dry-run'], silent }
-            )
+            logger.title(`dotai knowledge init — v${VERSION}`)
+            logger.newline()
 
-            // Mark knowledge as enabled in config
-            if (!argv['dry-run'] && config) {
-              config.knowledge = { ...knowledgeConfig, enabled: true }
-              await writeConfig(projectRoot, config)
-            }
+            // 1. Create knowledge directory structure
+            await ensureDir(join(knowledgePath, 'modules'))
+            await ensureDir(join(knowledgePath, 'decisions'))
+            logger.success('.ai/knowledge/')
+            logger.success('.ai/knowledge/modules/')
 
-            if (!silent) {
-              logger.newline()
-              logger.success(`Scanned ${fileCount} files across ${moduleCount} modules → .ai/knowledge/`)
-              logger.newline()
-              logger.info('Next step: Ask your AI agent to deeply populate the knowledge base.')
-              logger.info('Example prompt for your agent:')
-              logger.newline()
-              logger.info('  "Use knowledge_explore to analyze the codebase, then use')
-              logger.info('   knowledge_append and knowledge_populate_ai_md to populate')
-              logger.info('   the knowledge base with architecture, patterns, and gotchas."')
-            }
-          } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : String(err)
-            logger.error(`Knowledge scan failed: ${message}`)
-            process.exit(1)
-          }
-        }
-      )
-      .command(
-        'update',
-        'Incremental update from last git commit',
-        (y) => y.option('silent', { type: 'boolean', description: 'Suppress output' }),
-        async (argv) => {
-          try {
-            const silent = argv.silent || false
-            const projectRoot = (await findProjectRoot()) || process.cwd()
-            const config = await requireInit(projectRoot)
-            const knowledgePath = getKnowledgePath(projectRoot, config.aiDir)
+            // 2. Write skeleton files (don't overwrite existing data)
+            const skeletons: [string, string][] = [
+              [join(knowledgePath, 'INDEX.md'), SKELETON_INDEX],
+              [join(knowledgePath, 'patterns.md'), SKELETON_PATTERNS],
+              [join(knowledgePath, 'gotchas.md'), SKELETON_GOTCHAS],
+              [join(knowledgePath, 'changelog.md'), SKELETON_CHANGELOG],
+            ]
 
-            if (!(await requireKnowledgeDir(knowledgePath))) {
-              process.exit(1)
-            }
-
-            const knowledgeConfig = getKnowledgeConfig(config)
-            const count = await runUpdate(projectRoot, knowledgePath, knowledgeConfig, silent)
-
-            if (!silent) {
-              logger.success(`Updated ${count} module(s)`)
-            }
-          } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : String(err)
-            logger.error(`Knowledge update failed: ${message}`)
-            process.exit(1)
-          }
-        }
-      )
-      .command(
-        'watch',
-        'Watch files and auto-update knowledge on save',
-        (y) => y.option('silent', { type: 'boolean', description: 'Suppress startup banner' }),
-        async (argv) => {
-          try {
-            const silent = argv.silent || false
-            const projectRoot = (await findProjectRoot()) || process.cwd()
-            const config = await requireInit(projectRoot)
-            const knowledgePath = getKnowledgePath(projectRoot, config.aiDir)
-
-            if (!(await requireKnowledgeDir(knowledgePath))) {
-              process.exit(1)
-            }
-
-            const knowledgeConfig = getKnowledgeConfig(config)
-
-            if (!silent) {
-              logger.info('Watching for changes... (Ctrl+C to stop)')
-            }
-
-            const watcher = new KnowledgeWatcher(
-              projectRoot,
-              knowledgeConfig,
-              async (files) => {
-                const scanner = new KnowledgeScanner(projectRoot, knowledgeConfig)
-                const renderer = new KnowledgeRenderer()
-                const modules = await scanner.scanChanged(files)
-
-                await ensureDir(join(knowledgePath, 'modules'))
-                for (const mod of modules) {
-                  await writeModuleFile(knowledgePath, mod, renderer)
-                }
-
-                // Regenerate INDEX
-                const result = await scanner.scanAll()
-                await writeTextFile(join(knowledgePath, 'INDEX.md'), renderer.renderIndex(result))
-
-                if (!silent) {
-                  logger.success(`Updated ${modules.length} module(s)`)
-                }
+            for (const [filePath, content] of skeletons) {
+              if (force || !(await pathExists(filePath))) {
+                await writeTextFile(filePath, content)
+                logger.success(filePath.replace(projectRoot + '/', ''))
+              } else {
+                logger.dim(`  skip ${filePath.replace(projectRoot + '/', '')} (exists)`)
               }
-            )
+            }
 
-            watcher.start()
+            // 3. Create knowledge-scan skill
+            const skillDir = join(projectRoot, aiDir, 'skills', 'knowledge-scan-skill')
+            const skillPath = join(skillDir, 'SKILL.md')
+            if (force || !(await pathExists(skillPath))) {
+              await ensureDir(skillDir)
+              await writeTextFile(skillPath, LEARN_SKILL)
+              logger.success(`${aiDir}/skills/knowledge-scan-skill/SKILL.md`)
+            } else {
+              logger.dim(`  skip ${aiDir}/skills/knowledge-scan-skill/SKILL.md (exists)`)
+            }
 
-            // Keep process alive
-            process.on('SIGINT', () => {
-              watcher.stop()
-              process.exit(0)
-            })
+            // 4. Create /learn command for each enabled tool
+            logger.newline()
+            logger.info('Creating /learn commands:')
+            for (const target of LEARN_CMD_TARGETS) {
+              if (!config.tools.includes(target.toolId)) continue
+              const cmdDir = join(projectRoot, aiDir, target.dir)
+              const cmdPath = join(cmdDir, target.filename)
+              if (force || !(await pathExists(cmdPath))) {
+                await ensureDir(cmdDir)
+                await writeTextFile(cmdPath, target.content())
+                logger.success(`  ${aiDir}/${target.dir}/${target.filename} (${target.toolId})`)
+              } else {
+                logger.dim(`  skip ${aiDir}/${target.dir}/${target.filename} (exists)`)
+              }
+            }
+
+            // 5. Update config
+            const knowledgeConfig = getKnowledgeConfig(config)
+            config.knowledge = { ...knowledgeConfig, enabled: true }
+            await writeConfig(projectRoot, config)
+
+            // 6. Refresh symlinks
+            logger.newline()
+            logger.info('Refreshing symlinks...')
+            await refreshSymlinks(projectRoot, aiDir, config.tools)
+
+            logger.newline()
+            logger.success('Knowledge base initialized')
+            logger.newline()
+            logger.info('Next step: Ask your AI agent to populate the knowledge base:')
+            logger.newline()
+            logger.plain('  /learn')
+            logger.newline()
+            logger.dim('Or prompt your agent directly:')
+            logger.dim('  "Explore this codebase and populate .ai/knowledge/ with')
+            logger.dim('   architecture, patterns, and gotchas."')
           } catch (err: unknown) {
             const message = err instanceof Error ? err.message : String(err)
-            logger.error(`Knowledge watch failed: ${message}`)
+            logger.error(`Knowledge init failed: ${message}`)
             process.exit(1)
           }
         }
       )
+
+      // ─── knowledge serve ────────────────────────────────────
       .command(
         'serve',
         'Start MCP server for agent tool access',
@@ -361,17 +347,11 @@ export const knowledgeCommand: CommandModule<{}, KnowledgeArgs> = {
             .option('project', { type: 'string', description: 'Explicit project root path (for IDE-spawned MCP where cwd may differ)' }),
         async (argv) => {
           try {
-            // IDE tools (Antigravity) may spawn MCP with a different cwd.
-            // --project lets the config explicitly pass the project root.
             const projectRoot = argv.project || (await findProjectRoot()) || process.cwd()
 
             process.stderr.write(`dotai MCP: project root = ${projectRoot}\n`)
 
-            // IMPORTANT: serve command must NEVER use logger (console.log -> stdout).
-            // stdout is reserved for JSON-RPC. All messages go to stderr.
-
             // MCP server runs independently — no .dotai.json required.
-            // Use config if available, otherwise fall back to defaults.
             const config = await readConfig(projectRoot)
             const aiDir = config?.aiDir || '.ai'
             const knowledgePath = getKnowledgePath(projectRoot, aiDir)
@@ -398,51 +378,8 @@ export const knowledgeCommand: CommandModule<{}, KnowledgeArgs> = {
           }
         }
       )
-      .command(
-        'hook <action>',
-        'Manage git post-commit hook',
-        (y) =>
-          y.positional('action', {
-            type: 'string',
-            choices: ['install', 'uninstall', 'status'] as const,
-            description: 'Hook action',
-            demandOption: true,
-          }),
-        async (argv) => {
-          try {
-            const projectRoot = (await findProjectRoot()) || process.cwd()
-            await requireInit(projectRoot)
-            logger.title('dotai knowledge hook')
-            logger.newline()
 
-            switch (argv.action) {
-              case 'install':
-                await installGitHook(projectRoot)
-                logger.success('Git post-commit hook installed')
-                logger.dim('Knowledge will auto-update after each commit')
-                break
-              case 'uninstall':
-                await uninstallGitHook(projectRoot)
-                logger.success('Git post-commit hook removed')
-                break
-              case 'status': {
-                const installed = await isGitHookInstalled(projectRoot)
-                if (installed) {
-                  logger.success('Git hook is installed')
-                } else {
-                  logger.dim('Git hook is not installed')
-                  logger.dim('Run: dotai knowledge hook install')
-                }
-                break
-              }
-            }
-          } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : String(err)
-            logger.error(`Hook operation failed: ${message}`)
-            process.exit(1)
-          }
-        }
-      )
+      // ─── knowledge status ───────────────────────────────────
       .command(
         'status',
         'Show knowledge base health',
@@ -456,11 +393,10 @@ export const knowledgeCommand: CommandModule<{}, KnowledgeArgs> = {
             logger.title('dotai knowledge status')
             logger.newline()
 
-            // Check if knowledge dir exists
             const exists = await pathExists(knowledgePath)
             if (!exists) {
               logger.warn('Knowledge directory does not exist')
-              logger.dim("Run 'dotai knowledge scan' to create it")
+              logger.dim("Run 'dotai knowledge init' to create it")
               return
             }
             logger.success('Knowledge directory exists')
@@ -469,33 +405,59 @@ export const knowledgeCommand: CommandModule<{}, KnowledgeArgs> = {
             const modulesDir = join(knowledgePath, 'modules')
             let moduleCount = 0
             if (await pathExists(modulesDir)) {
-              const { readdir } = await import('fs/promises')
               const entries = await readdir(modulesDir)
               moduleCount = entries.filter((e) => e.endsWith('.md')).length
             }
             logger.info(`${moduleCount} module(s) indexed`)
 
-            // Check last scan time from INDEX.md header
-            const indexPath = join(knowledgePath, 'INDEX.md')
-            if (await pathExists(indexPath)) {
-              const content = await readTextFile(indexPath)
-              const match = content.match(/Last scanned: (.+?) \|/)
-              if (match) {
-                const scanDate = new Date(match[1])
-                const daysSince = Math.floor((Date.now() - scanDate.getTime()) / (1000 * 60 * 60 * 24))
-                logger.dim(`Last scanned: ${match[1]}`)
-                if (daysSince > 7) {
-                  logger.warn(`Knowledge is ${daysSince} days stale — consider running 'dotai knowledge scan'`)
-                }
+            // Check skeleton files
+            const skeletonFiles = ['INDEX.md', 'patterns.md', 'gotchas.md', 'changelog.md']
+            let missingCount = 0
+            for (const f of skeletonFiles) {
+              if (!(await pathExists(join(knowledgePath, f)))) {
+                missingCount++
               }
             }
-
-            // Check git hook
-            const hookInstalled = await isGitHookInstalled(projectRoot)
-            if (hookInstalled) {
-              logger.success('Git post-commit hook is installed')
+            if (missingCount > 0) {
+              logger.warn(`${missingCount} skeleton file(s) missing — run \`dotai knowledge init\` to restore`)
             } else {
-              logger.dim('Git post-commit hook is not installed')
+              logger.success('All skeleton files present')
+            }
+
+            // Check knowledge-scan skill
+            const skillPath = join(projectRoot, config.aiDir, 'skills', 'knowledge-scan-skill', 'SKILL.md')
+            if (await pathExists(skillPath)) {
+              logger.success('Knowledge scan skill installed')
+            } else {
+              logger.dim('Knowledge scan skill not found — run `dotai knowledge init`')
+            }
+
+            // Check /learn command
+            let learnCount = 0
+            for (const target of LEARN_CMD_TARGETS) {
+              if (!config.tools.includes(target.toolId)) continue
+              const cmdPath = join(projectRoot, config.aiDir, target.dir, target.filename)
+              if (await pathExists(cmdPath)) learnCount++
+            }
+            const enabledCount = LEARN_CMD_TARGETS.filter((t) => config.tools.includes(t.toolId)).length
+            if (learnCount > 0) {
+              logger.success(`/learn command installed (${learnCount}/${enabledCount} tools)`)
+            } else {
+              logger.dim('/learn command not found — run `dotai knowledge init`')
+            }
+
+            // Check gotchas and patterns for content
+            for (const f of ['gotchas.md', 'patterns.md']) {
+              const filePath = join(knowledgePath, f)
+              if (await pathExists(filePath)) {
+                const content = await readTextFile(filePath)
+                const hasEntries = content.includes('### ')
+                if (hasEntries) {
+                  logger.dim(`  ${f} has entries ✓`)
+                } else {
+                  logger.dim(`  ${f} is empty — run /learn to populate`)
+                }
+              }
             }
           } catch (err: unknown) {
             const message = err instanceof Error ? err.message : String(err)
@@ -504,9 +466,11 @@ export const knowledgeCommand: CommandModule<{}, KnowledgeArgs> = {
           }
         }
       )
+
+      // ─── knowledge clean ────────────────────────────────────
       .command(
         'clean',
-        'Delete knowledge base for fresh re-scan',
+        'Delete knowledge base for fresh start',
         (y) => y.option('yes', { type: 'boolean', description: 'Skip confirmation', alias: 'y' }),
         async (argv) => {
           try {
@@ -529,9 +493,8 @@ export const knowledgeCommand: CommandModule<{}, KnowledgeArgs> = {
             }
 
             await rm(knowledgePath, { recursive: true, force: true })
-            logger.success('Knowledge base deleted. Run `dotai knowledge scan` to rebuild.')
+            logger.success('Knowledge base deleted. Run `dotai knowledge init` to rebuild.')
 
-            // Update config
             if (config?.knowledge) {
               config.knowledge.enabled = false
               await writeConfig(projectRoot, config)
@@ -539,71 +502,6 @@ export const knowledgeCommand: CommandModule<{}, KnowledgeArgs> = {
           } catch (err: unknown) {
             const message = err instanceof Error ? err.message : String(err)
             logger.error(`Knowledge clean failed: ${message}`)
-            process.exit(1)
-          }
-        }
-      )
-      .command(
-        'append',
-        'Add a finding to gotchas, patterns, or a module',
-        (y) =>
-          y
-            .option('module', { type: 'string', description: 'Target module file' })
-            .option('gotchas', { type: 'boolean', description: 'Append to gotchas.md' })
-            .option('patterns', { type: 'boolean', description: 'Append to patterns.md' })
-            .option('finding', { type: 'string', description: 'The finding to append', demandOption: true })
-            .option('agent', { type: 'string', description: 'Who discovered this', default: 'human' })
-            .check((argv) => {
-              if (!argv.module && !argv.gotchas && !argv.patterns) {
-                throw new Error('Specify --module <name>, --gotchas, or --patterns')
-              }
-              return true
-            }),
-        async (argv) => {
-          try {
-            const projectRoot = (await findProjectRoot()) || process.cwd()
-            const config = await requireInit(projectRoot)
-            const knowledgePath = getKnowledgePath(projectRoot, config.aiDir)
-
-            if (!(await requireKnowledgeDir(knowledgePath))) {
-              process.exit(1)
-            }
-
-            const timestamp = new Date().toISOString()
-            const entry = `\n### ${timestamp} — by ${argv.agent}\n${argv.finding}\n`
-
-            let targetPath: string
-            let targetName: string
-
-            if (argv.gotchas) {
-              targetPath = join(knowledgePath, 'gotchas.md')
-              targetName = 'gotchas.md'
-            } else if (argv.patterns) {
-              targetPath = join(knowledgePath, 'patterns.md')
-              targetName = 'patterns.md'
-            } else {
-              targetPath = join(knowledgePath, 'modules', `${argv.module}.md`)
-              targetName = `modules/${argv.module}.md`
-
-              if (!(await pathExists(targetPath))) {
-                logger.error(`Module file not found: ${targetName}`)
-                logger.dim('Available modules are listed in INDEX.md')
-                process.exit(1)
-              }
-            }
-
-            if (!(await pathExists(targetPath))) {
-              logger.error(`File not found: ${targetName}`)
-              process.exit(1)
-            }
-
-            const existing = await readTextFile(targetPath)
-            await writeTextFile(targetPath, existing + entry)
-
-            logger.success(`Appended finding to ${targetName}`)
-          } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : String(err)
-            logger.error(`Knowledge append failed: ${message}`)
             process.exit(1)
           }
         }

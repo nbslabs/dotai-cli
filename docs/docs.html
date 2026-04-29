@@ -615,7 +615,7 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
       <span>dot</span>ai
     </a>
-    <span class="topbar-version">v3.0.1</span>
+    <span class="topbar-version">v3.1.0</span>
     <div class="topbar-sep"></div>
     <span class="topbar-title">Documentation</span>
     <div class="topbar-spacer"></div>
@@ -679,8 +679,7 @@
       <div class="nav-group" data-group="knowledge">
         <span class="nav-group-title">Knowledge Base</span>
         <a class="nav-link" href="#kb-overview">Overview</a>
-        <a class="nav-link" href="#kb-scanning">Scanning</a>
-        <a class="nav-link" href="#kb-auto-update">Auto-Update</a>
+        <a class="nav-link" href="#kb-init">Initialization</a>
         <a class="nav-link" href="#kb-mcp">MCP Server</a>
         <a class="nav-link" href="#kb-auto-persist">Auto-Persist Rule</a>
         <a class="nav-link" href="#kb-populating">Populating with AI</a>
@@ -700,6 +699,11 @@
         <a class="nav-link" href="#cli-upgrade">dotai upgrade</a>
         <a class="nav-link" href="#cli-knowledge">dotai knowledge</a>
         <a class="nav-link" href="#cli-sdd">dotai sdd</a>
+        <a class="nav-link" href="#cli-mcp">dotai mcp</a>
+        <a class="nav-link" href="#cli-skill">dotai skill</a>
+        <a class="nav-link" href="#cli-rule">dotai rule</a>
+        <a class="nav-link" href="#cli-cmd">dotai cmd</a>
+        <a class="nav-link" href="#cli-config">dotai config</a>
       </div>
 
       <div class="nav-group" data-group="sdd">
@@ -752,8 +756,8 @@ GEMINI.md              <span class="comment"># Gemini CLI reads this</span>
 
         <p>One file to write. Four tools that read it. Zero drift.</p>
 
-        <h2>What's New in v3.0.1</h2>
-        <p>dotai is now a complete ecosystem for AI-driven development. The <strong>SDD Toolkit</strong> introduces a structured, 8-phase workflow where AI agents implement features from human-reviewed specifications — every piece of generated code traces back to an approved spec.</p>
+        <h2>What's New in v3.1.0</h2>
+        <p>dotai v3.1.0 adds <strong>5 new command groups</strong> for managing every aspect of your AI tool configuration from the CLI — MCP servers, skills, rules, slash commands, and config settings. Plus the <strong>SDD Toolkit</strong> from v3.0.0 for spec-driven development.</p>
         <h3>Supported Tools</h3>
         <ul>
           <li><strong>Gemini CLI</strong> — Google's CLI-based AI assistant</li>
@@ -778,7 +782,7 @@ GEMINI.md              <span class="comment"># Gemini CLI reads this</span>
 
         <h2>Verify</h2>
         <pre><code><span class="prompt">$</span> dotai --version
-<span class="comment">3.0.1</span></code></pre>
+<span class="comment">3.1.0</span></code></pre>
 
         <div class="callout callout-tip">
           <strong>Tip:</strong> If you use <code>npx</code> instead of a global install, prefix all commands with <code>npx dotai</code>.
@@ -797,8 +801,7 @@ GEMINI.md              <span class="comment"># Gemini CLI reads this</span>
 <span class="prompt">$</span> dotai init
 
 <span class="comment"># 3. (Optional) Build persistent knowledge</span>
-<span class="prompt">$</span> dotai knowledge scan
-<span class="prompt">$</span> dotai knowledge hook install
+<span class="prompt">$</span> dotai knowledge init
 
 <span class="comment"># Done! Edit .ai/ files — all tools stay in sync.</span></code></pre>
 
@@ -820,14 +823,16 @@ GEMINI.md              <span class="comment"># Gemini CLI reads this</span>
 ├── <span class="file-c">AI.md</span>               <span class="arrow-c">──→</span>    CLAUDE.md, GEMINI.md, AGENTS.md,
 │                               .github/copilot-instructions.md
 ├── <span class="file-c">DOTAI.md</span>                   Quick reference guide
-├── <span class="file-c">rules/</span>              <span class="arrow-c">──→</span>    .gemini/rules/
+├── <span class="file-c">rules/</span>              <span class="arrow-c">──→</span>    .claude/rules/, .gemini/rules/,
+│                               .agents/rules/
 │   ├── general.md
 │   ├── security.md
 │   └── testing.md
 ├── <span class="file-c">commands/</span>           <span class="arrow-c">──→</span>    .claude/commands/
 │   ├── review.md
 │   ├── deploy.md
-│   └── learn.md
+│   ├── learn.md
+│   └── git-stage-commit.md
 ├── <span class="file-c">commands-gemini/</span>    <span class="arrow-c">──→</span>    .gemini/commands/ <span class="comment">(Gemini uses .toml)</span>
 ├── <span class="file-c">skills/</span>             <span class="arrow-c">──→</span>    .claude/skills/, .gemini/skills/,
 │                               .agents/skills/, .github/skills/
@@ -878,7 +883,7 @@ GEMINI.md              <span class="comment"># Gemini CLI reads this</span>
         <p>Created by <code>dotai init</code>. Tracks which tools are configured, link states, and knowledge settings.</p>
 
         <pre><code>{
-  "version": "3.0.1",
+  "version": "3.1.0",
   "tools": ["claude", "gemini", "copilot", "antigravity"],
   "aiDir": ".ai",
   "gitignore": true,
@@ -955,7 +960,7 @@ GEMINI.md              <span class="comment"># Gemini CLI reads this</span>
         <h1>Rules</h1>
         <p class="subtitle">Coding rules applied to agents via <code>.ai/rules/</code>.</p>
 
-        <p>Rules are Markdown files with YAML frontmatter. They are symlinked to <code>.gemini/rules/</code> for Antigravity.</p>
+        <p>Rules are Markdown files with YAML frontmatter. They are symlinked to <code>.claude/rules/</code>, <code>.gemini/rules/</code>, and <code>.agents/rules/</code> for Claude, Gemini, and Antigravity respectively.</p>
 
         <h2>Frontmatter Fields</h2>
         <div class="table-wrap">
@@ -1023,6 +1028,27 @@ Review the current code changes and provide:
 
         <h2>The /learn Command</h2>
         <p>A special command (<code>.ai/commands/learn.md</code>) that teaches agents how to write findings back to the knowledge base using the <code>knowledge_append</code> MCP tool or CLI command.</p>
+
+        <h2>Built-in Slash Commands</h2>
+        <p><code>dotai init</code> automatically scaffolds these slash commands for all enabled tools:</p>
+
+        <div class="table-wrap">
+          <table class="doc-table">
+            <thead><tr><th>Command</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>/review</code></td><td>Review code changes and provide feedback</td></tr>
+              <tr><td><code>/deploy</code></td><td>Guide through the deployment process</td></tr>
+              <tr><td><code>/learn</code></td><td>Deep codebase scan — populate <code>.ai/knowledge/</code></td></tr>
+              <tr><td><code>/git-stage-commit</code></td><td>Stage all changes, generate commit message, commit locally (no push)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>The /git-stage-commit Command</h2>
+        <p>Stages all unstaged and modified changes, generates a conventional commit message from the diff, and commits locally without pushing. If the knowledge base exists but is unpopulated, it runs <code>/learn</code> first.</p>
+
+        <pre><code><span class="comment"># Usage — just run the slash command in your AI tool</span>
+/git-stage-commit</code></pre>
       </section>
 
       <section class="doc-section" id="skills">
@@ -1162,7 +1188,7 @@ applyTo: "src/backend/**,server/**,api/**"
               <tr><td><code>AI.md</code></td><td><code>GEMINI.md</code></td><td>Instructions file</td></tr>
               <tr><td><code>AI.md</code></td><td><code>AGENTS.md</code></td><td>Cross-tool standard file</td></tr>
               <tr><td><code>settings/gemini.json</code></td><td><code>.gemini/settings.json</code></td><td>Settings &amp; MCP config</td></tr>
-              <tr><td><code>rules/</code></td><td><code>.gemini/rules/</code></td><td>Coding rules (.md with frontmatter)</td></tr>
+              <tr><td><code>rules/</code></td><td><code>.claude/rules/</code>, <code>.gemini/rules/</code>, <code>.agents/rules/</code></td><td>Coding rules (.md with frontmatter)</td></tr>
               <tr><td><code>workflows/</code></td><td><code>.agents/workflows/</code></td><td>Workflow definitions</td></tr>
               <tr><td><code>skills/</code></td><td><code>.agents/skills/</code></td><td>Skill packages</td></tr>
               <tr><td><code>knowledge/</code></td><td><code>.gemini/knowledge/</code></td><td>Persistent knowledge base</td></tr>
@@ -1191,7 +1217,9 @@ applyTo: "src/backend/**,server/**,api/**"
               <tr><td><code>AI.md</code></td><td><code>GEMINI.md</code></td><td>Gemini CLI / Antigravity</td></tr>
               <tr><td><code>AI.md</code></td><td><code>AGENTS.md</code></td><td>Antigravity</td></tr>
               <tr><td><code>AI.md</code></td><td><code>.github/copilot-instructions.md</code></td><td>GitHub Copilot</td></tr>
-              <tr><td><code>rules/</code></td><td><code>.gemini/rules/</code></td><td>Antigravity</td></tr>
+              <tr><td><code>rules/</code></td><td><code>.claude/rules/</code></td><td>Claude Code</td></tr>
+              <tr><td><code>rules/</code></td><td><code>.gemini/rules/</code></td><td>Gemini CLI</td></tr>
+              <tr><td><code>rules/</code></td><td><code>.agents/rules/</code></td><td>Antigravity</td></tr>
               <tr><td><code>commands/</code></td><td><code>.claude/commands/</code></td><td>Claude Code</td></tr>
               <tr><td><code>commands-gemini/</code></td><td><code>.gemini/commands/</code></td><td>Gemini CLI</td></tr>
               <tr><td><code>skills/</code></td><td><code>.claude/skills/, .gemini/skills/, .agents/skills/, .github/skills/</code></td><td>All 4 tools</td></tr>
@@ -1265,65 +1293,34 @@ applyTo: "src/backend/**,server/**,api/**"
 ├── <span class="file-c">modules/</span>         <span class="comment">Per-module deep summaries</span>
 └── <span class="file-c">decisions/</span>       <span class="comment">Architecture decision records</span></div>
 
-        <h2>Why Two Steps?</h2>
-        <p>The CLI scanner (<code>dotai knowledge scan</code>) is fast but shallow — it extracts exports, file structure, and dependencies. AI agents understand <em>semantics</em> — they identify patterns, gotchas, and architectural decisions that no static scanner can.</p>
+        <h2>Why AI-Driven?</h2>
+        <p>CLI scanners extract exports and file structure, but they miss <em>context</em> — why something is designed a certain way, what not to do, hidden dependencies. AI agents understand semantics and produce dramatically better knowledge.</p>
 
-        <p><strong>Step 1:</strong> <code>dotai knowledge scan</code> — generates the skeleton<br>
-        <strong>Step 2:</strong> Ask your AI agent to deeply populate it</p>
+        <p><strong>Step 1:</strong> <code>dotai knowledge init</code> — scaffolds directory + /learn command<br>
+        <strong>Step 2:</strong> Run <code>/learn</code> to let your AI agent deeply populate it</p>
       </section>
 
-      <section class="doc-section" id="kb-scanning">
-        <h1>Scanning</h1>
-        <p class="subtitle">Generate knowledge files from your codebase.</p>
+      <section class="doc-section" id="kb-init">
+        <h1>Initialization</h1>
+        <p class="subtitle">Scaffold the knowledge directory, AI skills, and /learn commands.</p>
 
-        <pre><code><span class="comment"># Full codebase scan</span>
-<span class="prompt">$</span> dotai knowledge scan
+        <pre><code><span class="comment"># Initialize knowledge base</span>
+<span class="prompt">$</span> dotai knowledge init
 
-<span class="comment"># Scan only one module</span>
-<span class="prompt">$</span> dotai knowledge scan --module src/core
+<span class="comment"># Re-write skill and command files (preserves knowledge data)</span>
+<span class="prompt">$</span> dotai knowledge init --force</code></pre>
 
-<span class="comment"># Custom scan depth</span>
-<span class="prompt">$</span> dotai knowledge scan --depth 3
-
-<span class="comment"># Preview without writing</span>
-<span class="prompt">$</span> dotai knowledge scan --dry-run</code></pre>
-
-        <h2>Supported Languages</h2>
-        <p>The scanner uses regex-based AST heuristics for: TypeScript, JavaScript, Java, Python, Go.</p>
-
-        <h2>What Gets Generated</h2>
+        <h2>What Gets Created</h2>
         <ul>
-          <li><code>INDEX.md</code> — High-level module map with symbol table</li>
-          <li><code>modules/*.md</code> — Per-module summaries (exports, imports, dependencies)</li>
-          <li><code>patterns.md</code> — Skeleton for recurring patterns (populated by agents)</li>
-          <li><code>gotchas.md</code> — Skeleton for edge cases (populated by agents)</li>
-          <li><code>changelog.md</code> — Skeleton for recent changes (auto-filled by git hook)</li>
+          <li><code>knowledge/</code> — Directory with skeleton files (INDEX.md, patterns.md, gotchas.md, changelog.md)</li>
+          <li><code>skills/knowledge-scan-skill/SKILL.md</code> — AI skill for deep codebase analysis</li>
+          <li><code>/learn</code> slash command — for each enabled tool (Claude, Gemini, Antigravity, Copilot)</li>
         </ul>
-      </section>
 
-      <section class="doc-section" id="kb-auto-update">
-        <h1>Auto-Update</h1>
-        <p class="subtitle">Keep knowledge current with watch mode and git hooks.</p>
-
-        <h2>Git Post-Commit Hook</h2>
-        <pre><code><span class="prompt">$</span> dotai knowledge hook install   <span class="comment"># install</span>
-<span class="prompt">$</span> dotai knowledge hook status    <span class="comment"># check if installed</span>
-<span class="prompt">$</span> dotai knowledge hook uninstall <span class="comment"># remove</span></code></pre>
-
-        <p>The hook runs after every <code>git commit</code>. It:</p>
-        <ol>
-          <li>Detects changed files from the commit</li>
-          <li>Re-scans affected modules</li>
-          <li>Appends to <code>changelog.md</code></li>
-          <li><strong>Auto-amends</strong> the knowledge changes into the same commit (no extra commits)</li>
-        </ol>
-
-        <h2>Watch Mode</h2>
-        <pre><code><span class="prompt">$</span> dotai knowledge watch</code></pre>
-        <p>Watches for file changes and auto-updates knowledge on save. 1500ms debounce for batch saves.</p>
-
-        <h2>Manual Update</h2>
-        <pre><code><span class="prompt">$</span> dotai knowledge update  <span class="comment"># incremental from last git commit</span></code></pre>
+        <h2>Next Step</h2>
+        <p>After initialization, ask your AI agent to populate the knowledge base:</p>
+        <pre><code>/learn</code></pre>
+        <p>The agent will explore the codebase, analyze each module, and persist findings to <code>.ai/knowledge/</code> using MCP tools.</p>
       </section>
 
       <section class="doc-section" id="kb-mcp">
@@ -1588,7 +1585,7 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
         </div>
 
         <h2>How It Works</h2>
-        <p>When you upgrade dotai, your existing <code>.ai/</code> files keep stale template content because <code>dotai init</code> never overwrites existing files. <code>dotai upgrade</code> detects what changed and helps you migrate.</p>
+        <p>When you upgrade dotai, your existing <code>.ai/</code> files keep stale template content because <code>dotai init</code> never overwrites existing files. <code>dotai upgrade</code> detects what changed, removes obsolete files, and helps you migrate.</p>
 
         <h2>File Categories</h2>
         <div class="table-wrap">
@@ -1598,6 +1595,7 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
               <tr><td><strong>NEW</strong></td><td>Auto-created</td><td>Template added in newer version</td></tr>
               <tr><td><strong>CURRENT</strong></td><td>Skipped</td><td>File matches latest template</td></tr>
               <tr><td><strong>AUTO-UPDATE</strong></td><td>Auto-overwritten</td><td><code>DOTAI.md</code> (reference docs only)</td></tr>
+              <tr><td><strong>STALE</strong></td><td>Auto-removed</td><td>Files from deprecated features (e.g., old knowledge scan templates)</td></tr>
               <tr><td><strong>REVIEW</strong></td><td>Saved to <code>_upgrade/</code></td><td><code>AI.md</code> (user-customized)</td></tr>
             </tbody>
           </table>
@@ -1616,28 +1614,19 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
 
       <section class="doc-section" id="cli-knowledge">
         <h1>dotai knowledge</h1>
-        <p class="subtitle">Manage persistent codebase knowledge base — 8 subcommands.</p>
+        <p class="subtitle">Manage persistent codebase knowledge base — 4 subcommands.</p>
 
         <div class="table-wrap">
           <table class="doc-table">
             <thead><tr><th>Subcommand</th><th>Description</th></tr></thead>
             <tbody>
-              <tr><td><code>dotai knowledge scan</code></td><td>Full codebase scan — generate/update knowledge files</td></tr>
-              <tr><td><code>dotai knowledge update</code></td><td>Incremental update from last git commit</td></tr>
-              <tr><td><code>dotai knowledge watch</code></td><td>Watch mode — update on file save (1500ms debounce)</td></tr>
+              <tr><td><code>dotai knowledge init</code></td><td>Scaffold knowledge directory + /learn command + scan skill</td></tr>
               <tr><td><code>dotai knowledge serve</code></td><td>MCP stdio server with 7 tools (runs independently)</td></tr>
-              <tr><td><code>dotai knowledge hook &lt;action&gt;</code></td><td>Manage git post-commit hook (install / uninstall / status)</td></tr>
-              <tr><td><code>dotai knowledge status</code></td><td>Show knowledge base health + staleness</td></tr>
-              <tr><td><code>dotai knowledge append</code></td><td>Add a finding to gotchas, patterns, or a module</td></tr>
-              <tr><td><code>dotai knowledge clean</code></td><td>Delete knowledge base for fresh re-scan</td></tr>
+              <tr><td><code>dotai knowledge status</code></td><td>Show knowledge base health</td></tr>
+              <tr><td><code>dotai knowledge clean</code></td><td>Delete knowledge base for fresh start</td></tr>
             </tbody>
           </table>
         </div>
-
-        <h2>Append Flags</h2>
-        <pre><code><span class="prompt">$</span> dotai knowledge append --gotchas --finding "..." --agent "claude"
-<span class="prompt">$</span> dotai knowledge append --patterns --finding "..."
-<span class="prompt">$</span> dotai knowledge append --module core --finding "..."</code></pre>
       </section>
 
       <section class="doc-section" id="cli-sdd">
@@ -1650,6 +1639,7 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
             <tbody>
               <tr><td><code>dotai sdd init</code></td><td>Scaffold SDD toolkit — 8 skills, templates, 28 cross-tool commands</td></tr>
               <tr><td><code>dotai sdd new &lt;name&gt;</code></td><td>Create a new feature directory from the template</td></tr>
+              <tr><td><code>dotai sdd remove &lt;name&gt;</code></td><td>Remove a feature and all its artifacts</td></tr>
               <tr><td><code>dotai sdd list</code></td><td>List all features with their current phase and stats</td></tr>
               <tr><td><code>dotai sdd status [name]</code></td><td>Show phase-by-phase progress checklist for a feature</td></tr>
             </tbody>
@@ -1665,6 +1655,161 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
         <pre><code><span class="prompt">$</span> dotai sdd new user-auth     <span class="comment"># creates .ai/sdd/user-auth/</span></code></pre>
         <div class="callout callout-info">
           <strong>📝 Naming:</strong> Feature names must be lowercase kebab-case (e.g., <code>user-auth</code>, <code>api-v2</code>). No underscores, no uppercase.
+        </div>
+      </section>
+
+      <!-- ═══════ CLI: MCP ═══════ -->
+
+      <section class="doc-section" id="cli-mcp">
+        <h1>dotai mcp</h1>
+        <p class="subtitle">Manage MCP server configurations across all enabled tool settings files. <em>(v3.1.0)</em></p>
+
+        <div class="table-wrap">
+          <table class="doc-table">
+            <thead><tr><th>Subcommand</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>dotai mcp add &lt;name&gt; -c &lt;cmd&gt;</code></td><td>Add an MCP server to all enabled tool settings</td></tr>
+              <tr><td><code>dotai mcp remove &lt;name&gt;</code></td><td>Remove an MCP server from all settings files</td></tr>
+              <tr><td><code>dotai mcp list [--json]</code></td><td>List all configured MCP servers</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Add Options</h2>
+        <div class="table-wrap">
+          <table class="doc-table">
+            <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>-c, --command</code></td><td>Command to run the server (required)</td></tr>
+              <tr><td><code>-a, --args</code></td><td>Comma-separated arguments</td></tr>
+              <tr><td><code>-e, --env</code></td><td>Comma-separated KEY=VALUE env vars</td></tr>
+              <tr><td><code>--url</code></td><td>URL for HTTP-based MCP servers</td></tr>
+              <tr><td><code>--tool</code></td><td>Only add to a specific tool (e.g., claude)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Examples</h2>
+        <pre><code><span class="prompt">$</span> dotai mcp add my-server -c npx -a "my-pkg,serve,--stdio"
+<span class="prompt">$</span> dotai mcp add db -c npx -a "db-mcp" -e "DB_URL=postgres://localhost"
+<span class="prompt">$</span> dotai mcp list
+<span class="prompt">$</span> dotai mcp remove my-server</code></pre>
+
+        <div class="callout callout-info">
+          <strong>Note:</strong> Gemini CLI and Antigravity share <code>settings/gemini.json</code>. Adding a server applies to both tools automatically.
+        </div>
+      </section>
+
+      <!-- ═══════ CLI: Skill ═══════ -->
+
+      <section class="doc-section" id="cli-skill">
+        <h1>dotai skill</h1>
+        <p class="subtitle">Manage reusable skill packages in <code>.ai/skills/</code>. <em>(v3.1.0)</em></p>
+
+        <div class="table-wrap">
+          <table class="doc-table">
+            <thead><tr><th>Subcommand</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>dotai skill add &lt;name&gt; [-d "desc"]</code></td><td>Create a skill directory with SKILL.md template</td></tr>
+              <tr><td><code>dotai skill remove &lt;name&gt; [-y]</code></td><td>Delete a skill package</td></tr>
+              <tr><td><code>dotai skill list [--json]</code></td><td>List all skills with descriptions and tool linkage</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Examples</h2>
+        <pre><code><span class="prompt">$</span> dotai skill add code-review -d "Code review checklist"
+<span class="prompt">$</span> dotai skill list
+<span class="prompt">$</span> dotai skill remove code-review -y</code></pre>
+
+        <div class="callout callout-info">
+          <strong>Note:</strong> Skill names must be lowercase kebab-case. Symlinks are auto-refreshed after adding a skill.
+        </div>
+      </section>
+
+      <!-- ═══════ CLI: Rule ═══════ -->
+
+      <section class="doc-section" id="cli-rule">
+        <h1>dotai rule</h1>
+        <p class="subtitle">Manage coding rule files in <code>.ai/rules/</code>. <em>(v3.1.0)</em></p>
+
+        <div class="table-wrap">
+          <table class="doc-table">
+            <thead><tr><th>Subcommand</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>dotai rule add &lt;name&gt; [--always]</code></td><td>Create a rule file with YAML frontmatter</td></tr>
+              <tr><td><code>dotai rule remove &lt;name&gt; [-y]</code></td><td>Delete a rule file</td></tr>
+              <tr><td><code>dotai rule list [--json]</code></td><td>List all rules with alwaysApply status</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Examples</h2>
+        <pre><code><span class="prompt">$</span> dotai rule add api-conventions --always
+<span class="prompt">$</span> dotai rule add testing-guidelines
+<span class="prompt">$</span> dotai rule list</code></pre>
+      </section>
+
+      <!-- ═══════ CLI: Cmd ═══════ -->
+
+      <section class="doc-section" id="cli-cmd">
+        <h1>dotai cmd</h1>
+        <p class="subtitle">Manage custom slash commands across all tool formats simultaneously. <em>(v3.1.0)</em></p>
+
+        <div class="table-wrap">
+          <table class="doc-table">
+            <thead><tr><th>Subcommand</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>dotai cmd add &lt;name&gt;</code></td><td>Create command files for every enabled tool format</td></tr>
+              <tr><td><code>dotai cmd remove &lt;name&gt; [-y]</code></td><td>Remove command from all formats</td></tr>
+              <tr><td><code>dotai cmd list [--json]</code></td><td>List all commands merged across formats</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Format Mapping</h2>
+        <div class="table-wrap">
+          <table class="doc-table">
+            <thead><tr><th>Tool</th><th>Directory</th><th>Format</th></tr></thead>
+            <tbody>
+              <tr><td>Claude Code</td><td><code>commands/</code></td><td><code>.md</code></td></tr>
+              <tr><td>Gemini CLI</td><td><code>commands-gemini/</code></td><td><code>.toml</code></td></tr>
+              <tr><td>Antigravity</td><td><code>workflows/</code></td><td><code>.md</code></td></tr>
+              <tr><td>Copilot</td><td><code>prompts/</code></td><td><code>.prompt.md</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Examples</h2>
+        <pre><code><span class="prompt">$</span> dotai cmd add deploy         <span class="comment"># creates files for all enabled tools</span>
+<span class="prompt">$</span> dotai cmd list               <span class="comment"># merged view across formats</span>
+<span class="prompt">$</span> dotai cmd remove deploy</code></pre>
+      </section>
+
+      <!-- ═══════ CLI: Config ═══════ -->
+
+      <section class="doc-section" id="cli-config">
+        <h1>dotai config</h1>
+        <p class="subtitle">View and modify <code>.dotai.json</code> settings directly. <em>(v3.1.0)</em></p>
+
+        <div class="table-wrap">
+          <table class="doc-table">
+            <thead><tr><th>Subcommand</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>dotai config get &lt;key&gt;</code></td><td>Read a config value</td></tr>
+              <tr><td><code>dotai config set &lt;key&gt; &lt;value&gt;</code></td><td>Set a config value (restricted keys)</td></tr>
+              <tr><td><code>dotai config show</code></td><td>Display full configuration as JSON</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Examples</h2>
+        <pre><code><span class="prompt">$</span> dotai config show
+<span class="prompt">$</span> dotai config get tools
+<span class="prompt">$</span> dotai config set aiDir .ai</code></pre>
+
+        <div class="callout callout-info">
+          <strong>Note:</strong> Only safe keys (<code>aiDir</code>, <code>gitignore</code>) can be set directly. Use <code>dotai add/remove</code> for tools and <code>dotai mcp add/remove</code> for MCP servers.
         </div>
       </section>
 
@@ -2123,17 +2268,18 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
         <h1>Upgrading</h1>
         <p class="subtitle">Migration steps from previous versions.</p>
 
-        <h2>From any version to v3.0.0+</h2>
-        <p>v3.0.0 introduces <code>dotai upgrade</code> — a dedicated command that detects stale scaffold files and helps you migrate.</p>
+        <h2>From any version to v3.1.0+</h2>
+        <p>v3.1.0 adds stale file cleanup to <code>dotai upgrade</code> and introduces new built-in slash commands.</p>
         <pre><code><span class="prompt">$</span> npm install -g @nbslabs/dotai   <span class="comment"># upgrade dotai globally</span>
 <span class="prompt">$</span> cd your-project
 <span class="prompt">$</span> dotai upgrade --dry-run          <span class="comment"># preview what would change</span>
-<span class="prompt">$</span> dotai upgrade                    <span class="comment"># apply safe updates</span></code></pre>
+<span class="prompt">$</span> dotai upgrade                    <span class="comment"># apply safe updates + stale cleanup</span></code></pre>
 
         <p>This will:</p>
         <ol>
-          <li>Create any <strong>new</strong> template files added in newer versions</li>
+          <li>Create <strong>new</strong> template files (e.g., <code>git-stage-commit.md</code>, <code>git-stage-commit.toml</code>)</li>
           <li>Auto-update <code>DOTAI.md</code> (reference documentation — safe to overwrite)</li>
+          <li><strong>Remove stale files</strong> from previous versions that are no longer in the scaffold</li>
           <li>Save latest templates to <code>.ai/_upgrade/</code> for user-modified files (e.g., <code>AI.md</code>)</li>
           <li>Track <code>scaffoldVersion</code> in <code>.dotai.json</code> for future upgrades</li>
         </ol>
@@ -2142,8 +2288,18 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
           <strong>Tip:</strong> After upgrading, review <code>.ai/_upgrade/</code> to see what's new in the templates. Merge any sections you want into your files, then delete the <code>_upgrade/</code> directory.
         </div>
 
+        <h3>Optional: Enable Knowledge Base</h3>
+        <pre><code><span class="prompt">$</span> dotai knowledge init              <span class="comment"># scaffold knowledge + /learn command</span></code></pre>
+
         <h3>Optional: Enable SDD Toolkit</h3>
         <pre><code><span class="prompt">$</span> dotai sdd init                  <span class="comment"># opt-in to Spec-Driven Development</span></code></pre>
+
+        <h2>From any version to v3.0.0+</h2>
+        <p>v3.0.0 introduced <code>dotai upgrade</code> — a dedicated command that detects stale scaffold files and helps you migrate.</p>
+        <pre><code><span class="prompt">$</span> npm install -g @nbslabs/dotai   <span class="comment"># upgrade dotai globally</span>
+<span class="prompt">$</span> cd your-project
+<span class="prompt">$</span> dotai upgrade --dry-run          <span class="comment"># preview what would change</span>
+<span class="prompt">$</span> dotai upgrade                    <span class="comment"># apply safe updates</span></code></pre>
 
         <h2>From v2.0.x to v2.1.0</h2>
         <pre><code><span class="prompt">$</span> npm install -g @nbslabs/dotai   <span class="comment"># upgrade</span>
@@ -2164,7 +2320,7 @@ Important Constraints, and Common Pitfalls sections of AI.md.</code></pre>
         <pre><code><span class="prompt">$</span> npm install -g @nbslabs/dotai
 <span class="prompt">$</span> cd your-project
 <span class="prompt">$</span> dotai upgrade            <span class="comment"># preferred (v3.0.0+)</span>
-<span class="prompt">$</span> dotai knowledge scan  <span class="comment"># optional: set up persistent knowledge</span></code></pre>
+<span class="prompt">$</span> dotai knowledge init  <span class="comment"># optional: set up persistent knowledge</span></code></pre>
       </section>
 
 

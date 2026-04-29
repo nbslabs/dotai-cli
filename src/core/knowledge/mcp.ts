@@ -324,13 +324,13 @@ export class KnowledgeMcpServer {
   private async toolRecentChanges(limit: number = 10): Promise<string> {
     const changelogPath = join(this.knowledgePath, 'changelog.md')
     if (!(await pathExists(changelogPath))) {
-      return 'No changelog found. Run `dotai knowledge scan` first.'
+      return 'No changelog found. Run `dotai knowledge init` and then `/learn` to populate.'
     }
 
     const content = await readFile(changelogPath, 'utf-8')
     const entries = content.split(/^## /m).slice(1, limit + 1)
     if (entries.length === 0) {
-      return 'Changelog is empty. Changes will appear after running `dotai knowledge update`.'
+      return 'Changelog is empty. Use `/learn` or `knowledge_append` to start tracking changes.'
     }
 
     return entries.map((e) => `## ${e.trim()}`).join('\n\n')
@@ -342,7 +342,7 @@ export class KnowledgeMcpServer {
   private async toolListModules(): Promise<string> {
     const modulesDir = join(this.knowledgePath, 'modules')
     if (!(await pathExists(modulesDir))) {
-      return 'No modules indexed yet. Run `dotai knowledge scan` first.'
+      return 'No modules indexed yet. Run `/learn` to populate the knowledge base.'
     }
 
     const entries = await readdir(modulesDir)
@@ -400,9 +400,9 @@ export class KnowledgeMcpServer {
       if (module) {
         header = `<!-- AUTO-GENERATED: safe to edit, do not delete header -->\n# Module: ${module}\n\n> Auto-created by knowledge_append.\n`
       } else if (target === 'patterns') {
-        header = `<!-- AUTO-GENERATED: safe to edit, do not delete header -->\n# Patterns\n\n> Recurring code patterns.\n> Added by: dotai scanner, AI agents (/learn command), and humans.\n`
+        header = `<!-- AUTO-GENERATED: safe to edit, do not delete header -->\n# Patterns\n\n> Recurring code patterns.\n> Added by: AI agents (/learn command) and humans.\n`
       } else {
-        header = `<!-- AUTO-GENERATED: safe to edit, do not delete header -->\n# Gotchas & Edge Cases\n\n> Things that are NOT obvious from reading the code.\n> Added by: dotai scanner, AI agents (/learn command), and humans.\n`
+        header = `<!-- AUTO-GENERATED: safe to edit, do not delete header -->\n# Gotchas & Edge Cases\n\n> Things that are NOT obvious from reading the code.\n> Added by: AI agents (/learn command) and humans.\n`
       }
 
       await writeFile(targetPath, header, 'utf-8')

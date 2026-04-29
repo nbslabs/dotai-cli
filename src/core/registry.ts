@@ -56,6 +56,13 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
         description: 'Claude skill packages',
       },
       {
+        source: 'rules',
+        target: '.claude/rules',
+        strategy: { type: 'dir-symlink' },
+        required: false,
+        description: 'Claude coding rules directory',
+      },
+      {
         source: 'knowledge',
         target: '.claude/knowledge',
         strategy: { type: 'dir-symlink' },
@@ -105,6 +112,13 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
         strategy: { type: 'file-symlink' },
         required: false,
         description: 'Gemini ignore file',
+      },
+      {
+        source: 'rules',
+        target: '.gemini/rules',
+        strategy: { type: 'dir-symlink' },
+        required: false,
+        description: 'Gemini coding rules directory',
       },
       {
         source: 'knowledge',
@@ -191,7 +205,7 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
       },
       {
         source: 'rules',
-        target: '.gemini/rules',
+        target: '.agents/rules',
         strategy: { type: 'dir-symlink' },
         required: false,
         description: 'Antigravity rules directory',

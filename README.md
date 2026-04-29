@@ -16,28 +16,25 @@ AI coding tools each expect their own config directory — `.claude/`, `.gemini/
 
 Edit one file. Every tool stays in sync.
 
-## What's New in v3.0.0 — Spec-Driven Development
+## What's New in v3.1.0 — Resource Management Commands
 
-dotai is now a complete ecosystem for AI-driven development. The new **SDD Toolkit** introduces a structured, 8-phase workflow where AI agents implement features from human-reviewed specifications — every piece of generated code traces back to an approved spec.
-
-```
-Idea → Requirements → Tasks → Plans → Implement → Evaluate → Review → Context-sync
-  👤       🤖           🤖       🤖       🤖          🤖         🤖🔍       🤖
-```
-
-**Human review checkpoints** at requirements, tasks, plans, and final review ensure the AI never drifts from what you actually want.
+Manage **every aspect** of your AI tool configuration from the CLI — MCP servers, skills, rules, slash commands, and config settings.
 
 ```bash
-dotai sdd init                    # scaffold SDD skills + commands
-dotai sdd new my-feature           # create feature from template
-# Then use /sdd-specify, /sdd-decompose, /sdd-plan, etc.
+dotai mcp add my-server -c npx -a "my-pkg,serve,--stdio"   # add MCP server
+dotai skill add code-review -d "Code review guidelines"    # add skill
+dotai rule add api-conventions --always                     # add rule
+dotai cmd add deploy                                        # add slash command
+dotai config show                                           # view config
 ```
 
-### Also supports
-- **Gemini CLI** — Google's CLI-based AI assistant
-- **Antigravity** — Google's IDE-integrated AI agent
-- **Claude Code** — Anthropic's terminal-native coding assistant
-- **GitHub Copilot** — GitHub's AI pair programmer
+All commands auto-sync across every enabled tool — Claude, Gemini, Antigravity, and Copilot.
+
+### Also includes
+- **Spec-Driven Development (SDD)** — 8-phase workflow for spec-traced code generation
+- **AI-Driven Knowledge Base** — `dotai knowledge init` scaffolds the KB + `/learn` command; agents populate it
+- **Built-in `/git-stage-commit`** — Stage, generate commit message, and commit locally (no push)
+- **4 AI Tools** — Gemini CLI, Antigravity, Claude Code, GitHub Copilot
 
 ## Why dotai?
 
@@ -78,7 +75,8 @@ dotai init
 ├── AI.md               ──→    CLAUDE.md, GEMINI.md, AGENTS.md,
 │                               .github/copilot-instructions.md
 ├── DOTAI.md                   Quick reference guide (this explains your setup)
-├── rules/              ──→    .gemini/rules/
+├── rules/              ──→    .claude/rules/, .gemini/rules/,
+│                               .agents/rules/
 ├── commands/           ──→    .claude/commands/
 ├── commands-gemini/    ──→    .gemini/commands/ (Gemini uses .toml format)
 ├── skills/             ──→    .claude/skills/, .gemini/skills/,
@@ -94,6 +92,8 @@ dotai init
 
 ## Commands
 
+### Core Commands
+
 | Command | Description |
 |---|---|
 | `dotai init` | Scaffold `.ai/` directory, or restore from existing `.dotai.json` |
@@ -106,8 +106,34 @@ dotai init
 | `dotai sync` | Re-evaluate and repair all symlinks |
 | `dotai doctor` | Run diagnostics and auto-fix issues |
 | `dotai upgrade` | Update `.ai/` scaffold files to latest templates |
+
+### Resource Management (v3.1.0)
+
+| Command | Description |
+|---|---|
+| `dotai mcp add <name>` | Add an MCP server to all enabled tool settings |
+| `dotai mcp remove <name>` | Remove an MCP server from all settings files |
+| `dotai mcp list` | List all configured MCP servers across tools |
+| `dotai skill add <name>` | Create a skill package with SKILL.md template |
+| `dotai skill remove <name>` | Delete a skill package |
+| `dotai skill list` | List all skills with descriptions and tool linkage |
+| `dotai rule add <name>` | Create a coding rule file with frontmatter |
+| `dotai rule remove <name>` | Delete a rule file |
+| `dotai rule list` | List all rules with alwaysApply status |
+| `dotai cmd add <name>` | Create a slash command across all enabled tool formats |
+| `dotai cmd remove <name>` | Remove a command from all formats |
+| `dotai cmd list` | List all commands merged across tool formats |
+| `dotai config get <key>` | Read a config value from `.dotai.json` |
+| `dotai config set <key> <value>` | Set a config value |
+| `dotai config show` | Display full configuration |
+
+### SDD (Spec-Driven Development)
+
+| Command | Description |
+|---|---|
 | `dotai sdd init` | Scaffold SDD toolkit (skills, commands, templates) |
 | `dotai sdd new <name>` | Create a new feature directory from template |
+| `dotai sdd remove <name>` | Remove a feature and all its artifacts |
 | `dotai sdd list` | List all features and their current phase |
 | `dotai sdd status [name]` | Show detailed phase progress for a feature |
 
@@ -122,63 +148,41 @@ dotai init
 
 ## Knowledge Base
 
-`dotai knowledge` builds and maintains a persistent codebase memory layer at `.ai/knowledge/`.
+`dotai knowledge` creates a persistent codebase memory layer at `.ai/knowledge/` and equips your AI agents with the skills and commands to populate it.
 
 ### Quick Start
 
 ```bash
-dotai knowledge scan          # scan codebase → .ai/knowledge/
-dotai knowledge hook install  # auto-update after each git commit
+dotai knowledge init   # scaffold knowledge dir + install /learn command
 ```
 
-### Step 2: Populate with Your AI Agent
+Then ask your AI agent:
 
-`dotai knowledge scan` creates the knowledge **skeleton** — module files, an index,
-and basic exports. But the deep insights (architecture, patterns, gotchas) come from
-your **AI agent** using the dotai MCP tools.
-
-Open your AI agent (Gemini, Claude, Antigravity, etc.) and use one of these prompts:
-
-**Full knowledge population:**
 ```
-Use knowledge_explore to analyze the entire codebase directory by directory.
-For each module, use knowledge_append to persist patterns, gotchas, and insights.
-Then use knowledge_populate_ai_md to fill in the AI.md with project overview,
-architecture, tech stack, key commands, constraints, and common pitfalls.
+/learn
 ```
 
-**Quick module deep-dive:**
-```
-Use knowledge_explore to read src/core/ and analyze the code deeply. Persist
-every non-obvious finding (hidden dependencies, edge cases, patterns) using
-knowledge_append. Focus on things that would surprise a new developer.
-```
+The `/learn` command instructs the agent to deeply analyze your codebase and persist findings (architecture, patterns, gotchas) into `.ai/knowledge/`.
 
-**AI.md population only:**
-```
-Explore the codebase using knowledge_explore, then call knowledge_populate_ai_md
-to fill in the Project Overview, Architecture, Tech Stack, Key Commands,
-Important Constraints, and Common Pitfalls sections of AI.md.
-```
+### How It Works
 
-> **Why two steps?** The CLI scanner is fast but shallow — it extracts exports,
-> file structure, and dependencies. AI agents understand *semantics* — they can
-> identify patterns, gotchas, and architectural decisions that no static scanner can.
+1. **`dotai knowledge init`** creates:
+   - `knowledge/` directory with skeleton files (INDEX.md, patterns.md, gotchas.md, changelog.md)
+   - `skills/knowledge-scan-skill/SKILL.md` — instructs agents how to perform deep analysis
+   - `/learn` slash command for each enabled tool (Claude, Gemini, Antigravity, Copilot)
+
+2. **Your AI agent does the rest** — using MCP tools (`knowledge_explore`, `knowledge_append`, `knowledge_populate_ai_md`) or by reading the skill directly. The agent understands semantics — it identifies patterns, gotchas, and architectural decisions that no static scanner can.
+
+> **Why AI-driven?** CLI scanners extract exports and file structure, but they miss *context* — why something is designed a certain way, what not to do, hidden dependencies. AI agents understand semantics and produce dramatically better knowledge.
 
 ### Knowledge Commands
 
 | Command | Description |
 |---|---|
-| `dotai knowledge scan` | Full codebase scan → generate/update knowledge files |
-| `dotai knowledge scan --module <path>` | Incremental scan of one module |
-| `dotai knowledge update` | Update from last git commit changes |
-| `dotai knowledge watch` | Watch mode — update on file save |
+| `dotai knowledge init` | Scaffold knowledge directory + /learn command + scan skill |
 | `dotai knowledge serve` | MCP stdio server (runs independently, no init required) |
-| `dotai knowledge hook install` | Install git post-commit hook (auto-amends knowledge into commits) |
-| `dotai knowledge hook uninstall` | Remove git post-commit hook |
-| `dotai knowledge status` | Show knowledge base health + staleness |
-| `dotai knowledge append` | Add a finding to gotchas or a module |
-| `dotai knowledge clean` | Delete knowledge base (re-scan fresh) |
+| `dotai knowledge status` | Show knowledge base health |
+| `dotai knowledge clean` | Delete knowledge base for fresh start |
 
 ### MCP Integration
 
@@ -258,19 +262,15 @@ Find your path: `which npx`
 **One-time setup:**
 ```bash
 dotai init                        # 1. create .ai/ + symlinks
-dotai knowledge scan              # 2. generate knowledge skeleton
-dotai knowledge hook install      # 3. auto-update on every commit
-# 4. Ask your agent: "Explore the codebase and populate the knowledge base"
+dotai knowledge init              # 2. scaffold knowledge + /learn command
+# 3. Ask your agent: /learn
 ```
 
 **Daily workflow:**
 ```
-Code normally → git commit → hook auto-updates knowledge + amends silently
-→ Open AI agent → reads knowledge → starts smart → discovers more → auto-persists
+Code normally → Open AI agent → reads knowledge → starts smart
+→ discovers more → auto-persists via knowledge_append
 ```
-
-> The git hook amends knowledge changes into each commit automatically.
-> No extra commits, no dirty diffs.
 
 ## SDD Toolkit
 
@@ -380,6 +380,91 @@ The argument to every phase command is the **feature name** — not an individua
 └── code-review.md                 ← Phase 7: holistic review
 ```
 
+## Resource Management
+
+`dotai` v3.1.0 introduces CLI commands to manage all `.ai/` resources without manually editing files.
+
+### MCP Servers
+
+Add, remove, and list MCP server configurations across all enabled tool settings files.
+
+```bash
+# Add an MCP server to all tools
+dotai mcp add my-server -c npx -a "@my-org/server,serve,--stdio"
+
+# Add with environment variables
+dotai mcp add db-server -c npx -a "db-mcp,--stdio" -e "DB_URL=postgres://localhost:5432/mydb"
+
+# Add to only Claude
+dotai mcp add claude-only-server -c npx -a "my-pkg" --tool claude
+
+# List all configured servers
+dotai mcp list
+
+# Remove a server
+dotai mcp remove my-server
+```
+
+### Skills
+
+Create and manage reusable skill packages in `.ai/skills/`.
+
+```bash
+dotai skill add code-review -d "Code review checklist"
+dotai skill list
+dotai skill remove code-review
+```
+
+### Rules
+
+Manage coding rule files in `.ai/rules/` with YAML frontmatter.
+
+```bash
+dotai rule add api-conventions --always    # always apply
+dotai rule add testing-guidelines          # on-demand
+dotai rule list
+```
+
+### Slash Commands
+
+Create cross-tool slash commands. `dotai cmd add` creates format-appropriate files for every enabled tool:
+
+| Tool | Directory | Format |
+|---|---|---|
+| Claude Code | `commands/` | `.md` |
+| Gemini CLI | `commands-gemini/` | `.toml` |
+| Antigravity | `workflows/` | `.md` |
+| Copilot | `prompts/` | `.prompt.md` |
+
+```bash
+dotai cmd add deploy         # creates files for all enabled tools
+dotai cmd list               # shows commands merged across formats
+dotai cmd remove deploy      # removes from all formats
+```
+
+### Built-in Slash Commands
+
+`dotai init` automatically creates these slash commands for all enabled tools:
+
+| Command | Description |
+|---|---|
+| `/review` | Review code changes and provide feedback |
+| `/deploy` | Guide through the deployment process |
+| `/learn` | Deep codebase scan — populate `.ai/knowledge/` |
+| `/git-stage-commit` | Stage all changes, generate commit message, commit locally (no push) |
+
+`/git-stage-commit` also checks whether the knowledge base has been populated — if `.ai/knowledge/` exists but is empty, it runs the `/learn` flow first.
+
+### Config
+
+View and modify `.dotai.json` settings directly.
+
+```bash
+dotai config show            # dump full config
+dotai config get tools       # get a specific key
+dotai config set aiDir .ai   # set a value (restricted keys)
+```
+
 ## Usage
 
 ### Initialize a new project (interactive)
@@ -431,6 +516,15 @@ dotai link --force --backup
 ```bash
 dotai remove gemini
 ```
+
+### Upgrade scaffold files to latest version
+```bash
+dotai upgrade              # smart update — new files, stale cleanup, manual review
+dotai upgrade --dry-run    # preview without changes
+dotai upgrade --force      # overwrite ALL files (destructive)
+```
+
+`upgrade` creates new template files, auto-updates reference docs, removes obsolete files from previous versions, and saves user-modified files to `_upgrade/` for manual review.
 
 ## The `.ai/AI.md` File
 

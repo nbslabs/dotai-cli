@@ -1,5 +1,5 @@
-import { access, mkdir, readFile, writeFile, lstat, readlink, constants } from 'fs/promises'
-import { dirname } from 'path'
+import { access, mkdir, readFile, writeFile, lstat, readlink, readdir, constants } from 'fs/promises'
+import { dirname, join } from 'path'
 
 export async function fileExists(filePath: string): Promise<boolean> {
   try {
@@ -81,4 +81,24 @@ export async function hasWriteAccess(dirPath: string): Promise<boolean> {
   } catch {
     return false
   }
+}
+
+/**
+ * Recursively count all files in a directory.
+ */
+export async function countFiles(dirPath: string): Promise<number> {
+  let count = 0
+  try {
+    const entries = await readdir(dirPath, { withFileTypes: true })
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        count += await countFiles(join(dirPath, entry.name))
+      } else {
+        count++
+      }
+    }
+  } catch {
+    // Directory doesn't exist or can't be read
+  }
+  return count
 }

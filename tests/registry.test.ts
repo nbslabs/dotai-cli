@@ -50,6 +50,7 @@ describe('registry', () => {
       const claude = getToolById('claude')!
       expect(claude.links.some((l) => l.source === 'AI.md' && l.target === 'CLAUDE.md')).toBe(true)
       expect(claude.links.some((l) => l.target === '.claude/settings.json')).toBe(true)
+      expect(claude.links.some((l) => l.source === 'rules' && l.target === '.claude/rules')).toBe(true)
     })
 
     it('gemini has correct link mappings', () => {
@@ -57,6 +58,7 @@ describe('registry', () => {
       expect(gemini.links.some((l) => l.source === 'AI.md' && l.target === 'GEMINI.md')).toBe(true)
       expect(gemini.links.some((l) => l.source === 'commands-gemini' && l.target === '.gemini/commands')).toBe(true)
       expect(gemini.links.some((l) => l.source === 'skills' && l.target === '.gemini/skills')).toBe(true)
+      expect(gemini.links.some((l) => l.source === 'rules' && l.target === '.gemini/rules')).toBe(true)
       expect(gemini.links.some((l) => l.target === '.geminiignore')).toBe(true)
     })
 
@@ -72,7 +74,7 @@ describe('registry', () => {
       expect(ag.links.some((l) => l.source === 'AI.md' && l.target === 'AGENTS.md')).toBe(true)
       expect(ag.links.some((l) => l.target === '.agents/workflows')).toBe(true)
       expect(ag.links.some((l) => l.target === '.agents/skills')).toBe(true)
-      expect(ag.links.some((l) => l.target === '.gemini/rules')).toBe(true)
+      expect(ag.links.some((l) => l.target === '.agents/rules')).toBe(true)
     })
   })
 

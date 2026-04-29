@@ -35,7 +35,7 @@
         "price": "0",
         "priceCurrency": "USD"
       },
-      "softwareVersion": "3.0.1",
+      "softwareVersion": "3.1.0",
       "license": "https://opensource.org/licenses/MIT"
     }
   </script>
@@ -716,7 +716,7 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" role="img" aria-labelledby="logo-title"><title id="logo-title">dotai logo</title><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         <span>dot</span>ai
       </a>
-      <span class="nav-version">v3.0.1</span>
+      <span class="nav-version">v3.1.0</span>
       <div class="nav-links">
         <a href="#how-it-works" class="hide-mobile">How it works</a>
         <a href="#tools" class="hide-mobile">Tools</a>
@@ -736,7 +736,7 @@
   <!-- Hero -->
   <div class="hero">
     <div class="container">
-      <div class="hero-badge">✦ v3.0.1 — Spec-Driven Development</div>
+      <div class="hero-badge">✦ v3.1.0 — Resource Management</div>
       <h1>
         One <code>.ai/</code> folder.<br>
         <span class="gradient">All your AI tools.</span><br>
@@ -777,7 +777,8 @@
       <div class="diagram"><span class="file">.ai/</span>                           <span class="comment">← Your source of truth (committed to git)</span>
 ├── <span class="file">AI.md</span>               <span class="arrow">──→</span>    CLAUDE.md, GEMINI.md, AGENTS.md,
 │                               .github/copilot-instructions.md
-├── <span class="file">rules/</span>              <span class="arrow">──→</span>    .gemini/rules/
+├── <span class="file">rules/</span>              <span class="arrow">──→</span>    .claude/rules/, .gemini/rules/,
+│                               .agents/rules/
 ├── <span class="file">commands/</span>           <span class="arrow">──→</span>    .claude/commands/
 ├── <span class="file">commands-gemini/</span>    <span class="arrow">──→</span>    .gemini/commands/ <span class="comment">(Gemini uses .toml)</span>
 ├── <span class="file">skills/</span>             <span class="arrow">──→</span>    .claude/skills/, .gemini/skills/,
@@ -863,8 +864,8 @@
         </div>
         <div class="kh-card">
           <div class="kh-icon">🔄</div>
-          <h3>Git-Native Updates</h3>
-          <p>A post-commit hook auto-amends knowledge into every commit. Your knowledge base stays current without extra steps or extra commits.</p>
+          <h3>AI-Driven Updates</h3>
+          <p>Run <code>/learn</code> to let your AI agent deeply analyze the codebase and populate the knowledge base. The more you use it, the smarter it gets.</p>
         </div>
       </div>
 
@@ -1041,10 +1042,9 @@
           <div style="display: flex; gap: 16px; margin-bottom: 24px;">
             <div style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">2</div>
             <div style="flex: 1;">
-              <div style="font-weight: 600; margin-bottom: 4px;">Scan codebase</div>
-              <div class="code-block" style="font-size: 0.85rem; padding: 10px 14px;"><span class="prompt">$</span> dotai knowledge scan
-<span class="prompt">$</span> dotai knowledge hook install</div>
-              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px;">Generates knowledge skeleton and installs auto-update git hook.</p>
+              <div style="font-weight: 600; margin-bottom: 4px;">Initialize knowledge</div>
+              <div class="code-block" style="font-size: 0.85rem; padding: 10px 14px;"><span class="prompt">$</span> dotai knowledge init</div>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px;">Scaffolds knowledge directory, scan skill, and /learn command.</p>
             </div>
           </div>
 
@@ -1054,10 +1054,8 @@
             <div style="flex: 1;">
               <div style="font-weight: 600; margin-bottom: 4px;">Populate with AI</div>
               <div class="code-block" style="font-size: 0.85rem; padding: 10px 14px;"><span class="comment"># Ask your AI agent:</span>
-"Explore the codebase and populate
-the knowledge base with patterns,
-gotchas, and architecture."</div>
-              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px;">AI agents use MCP tools to deeply analyze and persist findings.</p>
+/learn</div>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px;">AI agent uses MCP tools to deeply analyze and persist findings.</p>
             </div>
           </div>
         </div>
@@ -1085,42 +1083,34 @@ gotchas, and architecture."</div>
               <!-- Arrow down -->
               <line x1="170" y1="48" x2="170" y2="72" stroke="#818cf8" stroke-width="1.5" marker-end="url(#a1)"/>
 
-              <!-- Node 2: git commit -->
+              <!-- Node 2: AI Agent Session -->
               <rect x="90" y="76" width="160" height="48" rx="10" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.5"/>
-              <text x="170" y="96" text-anchor="middle" class="sdd-primary-text" font-size="13" font-weight="600">git commit</text>
-              <text x="170" y="112" text-anchor="middle" class="sdd-output-text" font-size="10">Triggers post-commit hook</text>
+              <text x="170" y="96" text-anchor="middle" class="sdd-primary-text" font-size="13" font-weight="600">AI Agent Session</text>
+              <text x="170" y="112" text-anchor="middle" class="sdd-output-text" font-size="10">Reads knowledge, starts smart</text>
 
               <!-- Arrow down -->
               <line x1="170" y1="124" x2="170" y2="148" stroke="#34d399" stroke-width="1.5" marker-end="url(#a2)"/>
 
-              <!-- Node 3: Hook auto-amends -->
+              <!-- Node 3: Auto-persist -->
               <rect x="70" y="152" width="200" height="56" rx="10" fill="#0d3320" stroke="#34d399" stroke-width="1.5"/>
-              <text x="170" y="174" text-anchor="middle" fill="#34d399" font-size="13" font-weight="600">Hook Auto-Amends</text>
-              <text x="170" y="192" text-anchor="middle" class="sdd-output-text" font-size="10">Knowledge updates into same commit</text>
+              <text x="170" y="174" text-anchor="middle" fill="#34d399" font-size="13" font-weight="600">Auto-Persist Findings</text>
+              <text x="170" y="192" text-anchor="middle" class="sdd-output-text" font-size="10">knowledge_append via MCP</text>
 
               <!-- Arrow down -->
-              <line x1="170" y1="208" x2="170" y2="232" stroke="#34d399" stroke-width="1.5" marker-end="url(#a2)"/>
+              <line x1="170" y1="208" x2="170" y2="232" stroke="#818cf8" stroke-width="1.5" marker-end="url(#a1)"/>
 
-              <!-- Node 4: AI Agent -->
+              <!-- Node 4: /git-stage-commit -->
               <rect x="70" y="236" width="200" height="48" rx="10" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.5"/>
-              <text x="170" y="256" text-anchor="middle" class="sdd-primary-text" font-size="13" font-weight="600">AI Agent Session</text>
-              <text x="170" y="272" text-anchor="middle" class="sdd-output-text" font-size="10">Reads knowledge, starts smart</text>
-
-              <!-- Arrow down -->
-              <line x1="170" y1="284" x2="170" y2="308" stroke="#34d399" stroke-width="1.5" marker-end="url(#a2)"/>
-
-              <!-- Node 5: Auto-persist -->
-              <rect x="70" y="312" width="200" height="48" rx="10" fill="#0d3320" stroke="#34d399" stroke-width="1.5"/>
-              <text x="170" y="332" text-anchor="middle" fill="#34d399" font-size="13" font-weight="600">Auto-Persist Findings</text>
-              <text x="170" y="348" text-anchor="middle" class="sdd-output-text" font-size="10">knowledge_append via MCP</text>
+              <text x="170" y="256" text-anchor="middle" class="sdd-primary-text" font-size="13" font-weight="600">/git-stage-commit</text>
+              <text x="170" y="272" text-anchor="middle" class="sdd-output-text" font-size="10">Stage + commit locally (no push)</text>
 
               <!-- Loop arrow back up -->
-              <line x1="70" y1="336" x2="30" y2="336" stroke="#818cf8" stroke-width="1" stroke-dasharray="5,4" opacity="0.5"/>
-              <line x1="30" y1="336" x2="30" y2="24" stroke="#818cf8" stroke-width="1" stroke-dasharray="5,4" opacity="0.5"/>
+              <line x1="70" y1="260" x2="30" y2="260" stroke="#818cf8" stroke-width="1" stroke-dasharray="5,4" opacity="0.5"/>
+              <line x1="30" y1="260" x2="30" y2="24" stroke="#818cf8" stroke-width="1" stroke-dasharray="5,4" opacity="0.5"/>
               <line x1="30" y1="24" x2="85" y2="24" stroke="#818cf8" stroke-width="1" stroke-dasharray="5,4" opacity="0.5" marker-end="url(#a1)"/>
 
               <!-- Loop label -->
-              <text x="20" y="181" text-anchor="middle" fill="#a5b4fc" font-size="16">&#x21bb;</text>
+              <text x="20" y="145" text-anchor="middle" fill="#a5b4fc" font-size="16">&#x21bb;</text>
             </svg>
 
             <!-- Legend below diagram -->

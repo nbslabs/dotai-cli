@@ -7,12 +7,28 @@ import { pathExists, readTextFile, writeTextFile, ensureDir } from '../utils/fs'
 import { VERSION } from '../version'
 import pc from 'picocolors'
 import { basename } from 'path'
+import { unlink, rmdir, readdir } from 'fs/promises'
 
 /**
  * Files that are pure reference documentation and safe to auto-overwrite.
  * Users don't typically customize these — they describe dotai itself.
  */
 const AUTO_UPDATE_FILES = new Set(['DOTAI.md'])
+
+/**
+ * Files that existed in previous scaffold versions but are no longer generated.
+ * These will be detected and removed during upgrade.
+ *
+ * Each entry is a relative path within the .ai/ directory.
+ * Add entries here whenever template files are removed across versions.
+ */
+const STALE_SCAFFOLD_FILES: string[] = [
+  // v3.1.0: knowledge CLI was simplified — scan/hook/append removed.
+  // The old knowledge init used to create these files via `dotai knowledge init`.
+  // They are no longer part of the scaffold but may remain in upgraded projects.
+  // Note: knowledge/ skeleton files (INDEX.md, patterns.md, gotchas.md, changelog.md)
+  // are still active — only listing files that were fully removed.
+]
 
 interface UpgradeArgs {
   'dry-run'?: boolean
@@ -76,6 +92,9 @@ export const upgradeCommand: CommandModule<{}, UpgradeArgs> = {
         projectRoot,
       }
       const templateFiles = getScaffoldTemplateFiles(config.tools)
+
+      // Build set of current template paths for stale detection
+      const currentTemplatePaths = new Set(templateFiles.map((f) => f.relPath))
 
       // Categorize each file
       const results: {
@@ -149,6 +168,60 @@ export const upgradeCommand: CommandModule<{}, UpgradeArgs> = {
         }
       }
 
+      // --- Stale file removal ---
+      // Check for files that are no longer part of the current scaffold
+      let staleCount = 0
+      const staleRemoved: string[] = []
+
+      for (const stalePath of STALE_SCAFFOLD_FILES) {
+        const fullPath = join(aiPath, stalePath)
+        if (await pathExists(fullPath)) {
+          staleRemoved.push(stalePath)
+          staleCount++
+
+          if (!dryRun) {
+            await unlink(fullPath)
+
+            // Try to remove parent dir if it's now empty
+            try {
+              const parentDir = dirname(fullPath)
+              const remaining = await readdir(parentDir)
+              if (remaining.length === 0) {
+                await rmdir(parentDir)
+              }
+            } catch {
+              // Ignore — parent dir may not be empty or may not exist
+            }
+          }
+        }
+      }
+
+      // Also detect any files in scaffold directories that are NOT in the
+      // current template set. This catches user files we won't touch, but
+      // warns about scaffold-generated files that may be obsolete.
+      // We only scan well-known scaffold subdirs, not user-created ones.
+      const scaffoldDirs = ['commands', 'commands-gemini', 'rules', 'settings', 'knowledge']
+      for (const dir of scaffoldDirs) {
+        const dirPath = join(aiPath, dir)
+        if (!(await pathExists(dirPath))) continue
+
+        try {
+          const entries = await readdir(dirPath)
+          for (const entry of entries) {
+            const relPath = `${dir}/${entry}`
+            // Skip if it's a known current template or already in stale list
+            if (currentTemplatePaths.has(relPath)) continue
+            if (STALE_SCAFFOLD_FILES.includes(relPath)) continue
+            // Skip directories (modules/, decisions/, etc.)
+            if (entry.indexOf('.') === -1) continue
+            // This is an unrecognized file — could be user-created or from old version
+            // We don't auto-delete these, just note them silently
+          }
+        } catch {
+          // Ignore read errors
+        }
+      }
+
       // Print results
       for (const r of results) {
         switch (r.status) {
@@ -170,6 +243,11 @@ export const upgradeCommand: CommandModule<{}, UpgradeArgs> = {
         }
       }
 
+      // Print stale removals
+      for (const s of staleRemoved) {
+        logger.plain(`  ${pc.red('−')} ${pc.red(s)}  ${pc.dim('— removed (obsolete)')}`)
+      }
+
       // Summary
       logger.newline()
 
@@ -185,6 +263,9 @@ export const upgradeCommand: CommandModule<{}, UpgradeArgs> = {
       if (forceUpdateCount > 0) {
         logger.warn(`${forceUpdateCount} file(s) overwritten (--force)`)
       }
+      if (staleCount > 0) {
+        logger.success(`${staleCount} stale file(s) removed`)
+      }
       if (reviewCount > 0) {
         logger.warn(`${reviewCount} file(s) need manual review`)
         logger.newline()
@@ -196,7 +277,7 @@ export const upgradeCommand: CommandModule<{}, UpgradeArgs> = {
         logger.dim(`After merging, delete ${aiDir}/_upgrade/`)
       }
 
-      if (newCount === 0 && autoUpdateCount === 0 && reviewCount === 0 && forceUpdateCount === 0) {
+      if (newCount === 0 && autoUpdateCount === 0 && reviewCount === 0 && forceUpdateCount === 0 && staleCount === 0) {
         logger.success('All scaffold files are up to date!')
       }
 
